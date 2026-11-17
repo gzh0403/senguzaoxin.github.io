@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>森古造型 SENGU · 可点击交互演示</title>
+<style>
+  :root{
+    --green:#1E4A3C; --pine:#15291F; --hover-g:#2A5C4A;
+    --gold-t:#7A5B32; --gold-l:#A07C4A; --gold-btn:#8A6A3E;
+    --bg:#F6F7F5; --card:#FFFFFF; --line:#E3E7E2;
+    --ink:#1A2420; --ink-2:#5F6B64; --ink-3:#66716B;
+    --mint:#EAF1EC; --sel:#DCE9E0; --tab-off:#8A948D;
+    --ok:#20714C; --ok-bg:#E7F1EB; --warn:#9A6410; --warn-bg:#FDF3E3;
+    --err:#B93A3A; --err-bg:#F9E9E9;
+    --r-s:4px; --r-m:8px; --r-l:12px; --pill:999px;
+    --shadow-card:0 1px 4px rgba(21,41,31,.05);
+    --shadow-float:0 8px 24px rgba(21,41,31,.12);
+    --shadow-phone:0 30px 70px rgba(21,41,31,.18);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+    background:#EEF1ED;color:var(--ink);-webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit;cursor:pointer;}
+  svg.ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none;}
+
+  /* ===== 外层框架 ===== */
+  .demo{max-width:1240px;margin:0 auto;padding:28px 24px 56px;}
+  .topbar{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid #d9ded8;}
+  .topbar .cn{font-size:28px;font-weight:600;letter-spacing:2px;}
+  .topbar .en{font-size:12px;letter-spacing:5px;color:var(--ink-2);margin-top:6px;}
+  .topbar .rule{width:46px;height:2px;background:var(--gold-l);align-self:center;}
+  .topbar .tag{margin-left:auto;font-size:12.5px;color:var(--gold-t);background:#fff;border:1px solid var(--gold-l);border-radius:var(--pill);padding:7px 14px;line-height:1.5;}
+  .hintbar{margin:16px 0 22px;background:#fff;border:1px solid var(--line);border-left:3px solid var(--gold-l);border-radius:var(--r-m);padding:14px 18px;font-size:13px;color:var(--ink-2);line-height:1.9;}
+  .hintbar b{color:var(--ink);}
+  .hintbar .flow{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:8px;}
+  .hintbar .flow span{background:var(--bg);border-radius:var(--pill);padding:3px 11px;font-size:12px;color:var(--ink-2);}
+  .hintbar .flow span i{font-style:normal;color:var(--gold-t);font-weight:600;}
+
+  .layout{display:grid;grid-template-columns:262px 1fr 258px;gap:22px;align-items:start;}
+  @media(max-width:1080px){.layout{grid-template-columns:240px 1fr;}.monitor{grid-column:1/-1;}}
+  @media(max-width:760px){.layout{grid-template-columns:1fr;}.side-panel{order:2;}.stage{order:1;}.monitor{order:3;}}
+
+  /* ===== 侧边：角色与页面地图 ===== */
+  .panel{background:#fff;border:1px solid var(--line);border-radius:var(--r-l);box-shadow:var(--shadow-card);overflow:hidden;}
+  .panel + .panel{margin-top:16px;}
+  .panel .ph{padding:14px 16px;border-bottom:1px solid var(--line);font-size:14px;font-weight:600;display:flex;align-items:center;gap:9px;}
+  .panel .ph::before{content:"";width:16px;height:2px;background:var(--gold-l);}
+  .pb{padding:14px;}
+  .role-btn{display:flex;align-items:center;gap:11px;width:100%;border:1px solid var(--line);background:#fff;border-radius:var(--r-m);padding:11px 12px;margin-bottom:9px;text-align:left;transition:.15s;}
+  .role-btn:last-child{margin-bottom:0;}
+  .role-btn:hover{border-color:var(--green);}
+  .role-btn.on{background:var(--green);border-color:var(--green);color:#fff;box-shadow:var(--shadow-card);}
+  .role-btn .rb-ic{width:36px;height:36px;border-radius:10px;background:var(--mint);color:var(--green);display:flex;align-items:center;justify-content:center;flex:none;}
+  .role-btn.on .rb-ic{background:rgba(255,255,255,.18);color:#fff;}
+  .role-btn .rb-t{font-size:14px;font-weight:600;}
+  .role-btn .rb-d{font-size:11.5px;opacity:.75;margin-top:2px;}
+  .nav-group-t{font-size:11.5px;color:var(--ink-3);margin:4px 2px 8px;letter-spacing:.5px;}
+  .nav-link{display:flex;align-items:center;justify-content:space-between;width:100%;border:none;background:none;padding:8px 10px;border-radius:var(--r-s);font-size:13px;color:var(--ink-2);text-align:left;}
+  .nav-link:hover{background:var(--bg);color:var(--green);}
+  .nav-link.cur{background:var(--mint);color:var(--green);font-weight:600;}
+  .nav-link .np{font-size:10.5px;color:var(--ink-3);font-family:Consolas,monospace;}
+  .sub-links{margin:2px 0 8px;padding-left:6px;border-left:1px dashed var(--line);}
+  .sub-links .nav-link{padding:6px 10px;font-size:12.5px;}
+
+  /* ===== 舞台：手机 ===== */
+  .stage{display:flex;flex-direction:column;align-items:center;}
+  .stage-cap{font-size:12.5px;color:var(--ink-3);margin-bottom:12px;}
+  .stage-cap b{color:var(--green);}
+  .phone{width:390px;border:10px solid var(--pine);border-radius:46px;background:var(--bg);box-shadow:var(--shadow-phone);overflow:hidden;position:relative;}
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:150px;height:24px;background:var(--pine);border-radius:0 0 16px 16px;z-index:6;}
+  .screen{height:760px;display:flex;flex-direction:column;background:var(--bg);}
+  .sbar{height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 20px 0 26px;font-size:13px;font-weight:600;flex:none;}
+  .sbar.dark{color:#fff;background:var(--pine);}
+  .sbar.light{color:var(--ink);background:#fff;}
+  .capsule{width:82px;height:30px;border-radius:var(--pill);border:1px solid rgba(255,255,255,.45);display:flex;align-items:center;justify-content:space-evenly;}
+  .capsule.lite{border-color:rgba(26,36,32,.2);}
+  .capsule i{width:4px;height:4px;border-radius:50%;background:currentColor;display:block;}
+  .capsule .cbar{width:15px;height:9px;border:1.4px solid currentColor;border-radius:2.5px;display:block;position:relative;}
+  .capsule .cbar::after{content:"";position:absolute;right:-4px;top:2px;width:1.4px;height:3.4px;background:currentColor;}
+
+  .navbar{height:46px;display:flex;align-items:center;justify-content:center;position:relative;font-size:17px;font-weight:600;flex:none;}
+  .navbar.dark{background:var(--pine);color:#fff;}
+  .navbar.light{background:#fff;color:var(--ink);border-bottom:1px solid var(--line);}
+  .navbar .back{position:absolute;left:12px;top:12px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;}
+
+  .viewport{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;}
+  .viewport::-webkit-scrollbar{display:none;}
+  .home-ind{height:18px;background:#fff;display:flex;justify-content:center;align-items:flex-end;padding-bottom:6px;flex:none;}
+  .home-ind i{width:112px;height:4px;border-radius:var(--pill);background:#1a2420;opacity:.85;}
+
+  /* TabBar */
+  .tabbar{height:58px;background:#fff;border-top:1px solid var(--line);display:flex;flex:none;}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10.5px;color:var(--tab-off);border:none;background:none;}
+  .tab svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+  .tab.on{color:var(--green);font-weight:600;}
+
+  /* ===== 手机内通用组件 ===== */
+  .sec-t{display:flex;align-items:center;justify-content:space-between;padding:18px 16px 11px;}
+  .sec-t .tt{font-size:16.5px;font-weight:600;}
+  .sec-t .more{font-size:12px;color:var(--ink-3);display:flex;align-items:center;gap:2px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);box-shadow:var(--shadow-card);}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:44px;padding:0 22px;border-radius:var(--r-m);font-size:15px;border:none;}
+  .btn-main{background:var(--green);color:#fff;font-weight:600;}
+  .btn-sec{background:#fff;color:var(--green);border:1.5px solid var(--green);}
+  .btn-gold{background:var(--gold-btn);color:#fff;font-weight:600;}
+  .btn-gray{background:var(--line);color:var(--ink-3);}
+  .btn-sm{height:34px;padding:0 14px;font-size:12.5px;border-radius:var(--r-s);}
+  .btn-block{width:100%;}
+
+  .st{display:inline-flex;align-items:center;gap:6px;height:25px;padding:0 10px;border-radius:var(--pill);font-size:11.5px;font-weight:600;white-space:nowrap;}
+  .st::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;}
+  .st-warn{background:var(--warn-bg);color:var(--warn);}
+  .st-ok{background:var(--ok-bg);color:var(--ok);}
+  .st-done{background:var(--mint);color:var(--green);}
+  .st-err{background:var(--err-bg);color:var(--err);}
+
+  .hero{background:var(--pine);border-radius:0 0 22px 22px;padding:4px 18px 20px;color:#fff;}
+  .hero .shop{font-size:21px;font-weight:600;letter-spacing:1px;}
+  .hero .en{font-size:9.5px;letter-spacing:5px;color:rgba(255,255,255,.62);margin-top:5px;}
+  .hero .gline{width:28px;height:2px;background:var(--gold-l);margin:12px 0 13px;}
+  .hero .banner{height:116px;border-radius:var(--r-l);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(255,255,255,.7);font-size:12px;letter-spacing:1px;background:linear-gradient(135deg,#245241,#1b3d31);border:1px solid rgba(255,255,255,.12);}
+  .hero .banner svg{width:40px;height:40px;opacity:.5;}
+  .hero .dots{display:flex;justify-content:center;gap:6px;margin-top:10px;}
+  .hero .dots i{width:5px;height:5px;border-radius:var(--pill);background:rgba(255,255,255,.3);}
+  .hero .dots i.on{width:14px;background:var(--gold-l);}
+
+  .info-bar{background:#fff;border:1px solid var(--line);border-radius:var(--r-m);margin:14px 16px 0;padding:4px 0;display:flex;}
+  .info-bar .cell{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0;color:var(--ink-2);font-size:10.5px;text-align:center;}
+  .info-bar .cell svg{width:18px;height:18px;color:var(--green);}
+  .info-bar .cell b{color:var(--ink);font-weight:500;font-size:11.5px;}
+  .quick{display:flex;gap:10px;margin:14px 16px 0;}
+  .q-main{flex:1.25;background:var(--green);color:#fff;border-radius:var(--r-m);padding:13px 8px;display:flex;flex-direction:column;align-items:center;gap:7px;font-size:12.5px;font-weight:600;border:none;}
+  .q-sec{flex:1;background:#fff;border:1px solid var(--line);border-radius:var(--r-m);padding:13px 6px;display:flex;flex-direction:column;align-items:center;gap:7px;font-size:12.5px;color:var(--ink);border:none;}
+  .hscroll{display:flex;gap:12px;padding:0 16px 4px;overflow-x:auto;scrollbar-width:none;}
+  .hscroll::-webkit-scrollbar{display:none;}
+  .proj-card{width:150px;background:#fff;border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden;flex:none;box-shadow:var(--shadow-card);text-align:left;padding:0;border:none;}
+  .proj-card .pic{height:88px;background:var(--mint);display:flex;align-items:center;justify-content:center;color:var(--green);position:relative;}
+  .proj-card .pic svg{width:26px;height:26px;opacity:.5;}
+  .proj-card .pic .tag{position:absolute;left:8px;top:8px;font-size:10px;background:rgba(255,255,255,.92);color:var(--green);padding:2px 7px;border-radius:var(--pill);}
+  .proj-card .bd{padding:9px 11px 11px;}
+  .proj-card .nm{font-size:14px;font-weight:600;}
+  .proj-card .mt{font-size:10.5px;color:var(--ink-2);margin-top:2px;}
+  .proj-card .ft{display:flex;justify-content:space-between;align-items:center;margin-top:7px;}
+  .proj-card .pr{color:var(--gold-t);font-weight:600;font-size:15px;}
+  .proj-card .dur{font-size:10px;color:var(--ink-2);background:var(--bg);padding:1px 7px;border-radius:var(--pill);}
+  .stylist{width:84px;flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:none;padding:0;}
+  .stylist.off{opacity:.5;}
+  .avatar{width:58px;height:58px;border-radius:50%;background:var(--mint);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;border:2px solid #fff;box-shadow:0 0 0 1px var(--line);}
+  img.avatar{object-fit:cover;display:block;}
+  .avatar-cap{font-size:9.5px;color:var(--ink-3);text-align:center;margin-top:2px;}
+  .stylist .nm{font-size:12.5px;font-weight:600;}
+  .stylist .tt{font-size:10.5px;color:var(--ink-3);}
+  .stylist .dot{font-size:10px;color:var(--ok);display:flex;align-items:center;gap:4px;}
+  .stylist .dot.rest{color:var(--warn);}
+  .stylist .dot::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;}
+
+  /* 列表页 */
+  .list-wrap{padding:12px 16px;}
+  .filter-row{display:flex;gap:8px;padding:12px 16px 4px;overflow-x:auto;scrollbar-width:none;}
+  .filter-row::-webkit-scrollbar{display:none;}
+  .chip{height:32px;padding:0 17px;border-radius:var(--pill);display:inline-flex;align-items:center;font-size:12.5px;background:#fff;border:1px solid var(--line);color:var(--ink-2);white-space:nowrap;flex:none;}
+  .chip.on{background:var(--green);border-color:var(--green);color:#fff;font-weight:600;}
+  .li-card{background:#fff;border:1px solid var(--line);border-radius:var(--r-m);padding:13px 14px;margin-bottom:11px;box-shadow:var(--shadow-card);width:100%;text-align:left;}
+  .li-top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .li-title{font-size:14.5px;font-weight:600;}
+  .li-sub{font-size:12px;color:var(--ink-2);margin-top:6px;line-height:1.7;}
+  .li-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--bg);}
+  .li-foot .no{font-size:10.5px;color:var(--ink-3);font-family:Consolas,monospace;}
+  .li-amt{color:var(--gold-t);font-weight:600;font-size:16px;}
+  .empty{text-align:center;color:var(--ink-3);font-size:13px;padding:60px 20px;}
+  .empty svg{width:44px;height:44px;opacity:.4;margin-bottom:12px;}
+
+  /* 预约页 */
+  .steps{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 6px;background:#fff;}
+  .step{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:10px;color:var(--ink-3);position:relative;flex:1;}
+  .step .dot{width:21px;height:21px;border-radius:50%;border:1.5px solid var(--line);color:var(--ink-3);display:flex;align-items:center;justify-content:center;font-size:10.5px;background:#fff;}
+  .step.done .dot{background:var(--green);border-color:var(--green);color:#fff;}
+  .step.done{color:var(--green);}
+  .step.cur .dot{border-color:var(--green);color:var(--green);font-weight:700;}
+  .step.cur{color:var(--green);font-weight:600;}
+  .step::after{content:"";position:absolute;top:10px;left:calc(50% + 15px);width:calc(100% - 30px);height:1px;background:var(--line);}
+  .step:last-child::after{display:none;}
+  .step.done::after{background:var(--green);}
+  .bk-sec{background:#fff;border:1px solid var(--line);border-radius:var(--r-m);margin:12px 16px 0;padding:13px;}
+  .bk-sec .lb{font-size:13px;font-weight:600;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+  .bk-sec .lb em{font-style:normal;font-size:10.5px;color:var(--ink-3);font-weight:400;}
+  .opt-row{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
+  .opt-row::-webkit-scrollbar{display:none;}
+  .opt-proj{flex:none;width:132px;border:1.5px solid var(--line);border-radius:var(--r-m);padding:9px 10px;background:#fff;text-align:left;}
+  .opt-proj.on{border-color:var(--green);background:var(--mint);}
+  .opt-proj .n{font-size:12.5px;font-weight:600;}
+  .opt-proj .p{color:var(--gold-t);font-weight:600;font-size:13px;margin-top:4px;}
+  .opt-sty{flex:none;width:70px;border:1.5px solid var(--line);border-radius:var(--r-m);padding:9px 3px;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;color:var(--ink-2);background:#fff;}
+  .opt-sty .avatar{width:36px;height:36px;font-size:11px;box-shadow:none;border:none;}
+  .opt-sty.on{border-color:var(--green);background:var(--mint);color:var(--green);font-weight:600;}
+  .opt-sty.dis{opacity:.45;}
+  .days{display:flex;justify-content:space-between;gap:5px;margin-bottom:11px;}
+  .day{flex:1;min-width:0;height:48px;border-radius:var(--r-m);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9.5px;color:var(--ink-3);background:var(--bg);}
+  .day b{font-size:14px;color:var(--ink);font-weight:600;}
+  .day.on{background:var(--pine);}
+  .day.on,.day.on b{color:#fff;}
+  .times{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .tm{height:34px;border-radius:var(--r-m);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:11.5px;color:var(--ink-2);background:#fff;}
+  .tm.on{background:var(--green);border-color:var(--green);color:#fff;font-weight:600;}
+  .tm.dis{background:var(--bg);border-color:transparent;color:var(--ink-3);text-decoration:line-through;opacity:.55;}
+  .fcell{margin-bottom:10px;}
+  .fcell label{display:block;font-size:12px;font-weight:600;margin-bottom:6px;}
+  .fcell label i{font-style:normal;color:var(--warn);}
+  .input{height:42px;border:1px solid var(--line);border-radius:var(--r-m);background:#fff;display:flex;align-items:center;padding:0 12px;font-size:14px;}
+  .input input{border:none;outline:none;background:none;width:100%;font-size:14px;font-family:inherit;color:var(--ink);}
+  .submit-bar{background:#fff;box-shadow:var(--shadow-float);padding:11px 16px 13px;display:flex;align-items:center;gap:12px;margin-top:14px;border-top:1px solid var(--line);position:sticky;bottom:0;}
+  .submit-bar .sum{flex:1;font-size:11px;color:var(--ink-2);line-height:1.5;}
+  .submit-bar .sum b{color:var(--ink);font-size:12.5px;}
+  .submit-bar .btn{height:42px;padding:0 20px;white-space:nowrap;}
+  .safe-tip{border-top:1px dashed var(--gold-l);background:rgba(160,124,74,.05);text-align:center;font-size:9.5px;color:var(--gold-t);padding:6px 0;}
+
+  /* 详情页 */
+  .detail-hero{background:#fff;border-bottom:1px solid var(--line);padding:16px;}
+  .detail-hero .dh-t{font-size:17px;font-weight:600;}
+  .detail-block{background:#fff;border:1px solid var(--line);border-radius:var(--r-m);margin:12px 16px 0;padding:14px;}
+  .detail-block h4{font-size:13px;margin-bottom:12px;color:var(--ink-2);font-weight:600;}
+  .kv{display:flex;justify-content:space-between;padding:7px 0;font-size:13px;border-bottom:1px solid var(--bg);}
+  .kv:last-child{border-bottom:none;}
+  .kv .k{color:var(--ink-3);}
+  .kv .v{font-weight:500;text-align:right;}
+  .kv .v.gold{color:var(--gold-t);font-weight:600;font-size:15px;}
+  .action-strip{background:#fff;border-top:1px solid var(--line);padding:12px 16px;margin-top:14px;position:sticky;bottom:0;}
+  .flow-steps{display:flex;gap:0;margin:4px 0 0;}
+  .flow-node{flex:1;text-align:center;font-size:10px;color:var(--ink-3);position:relative;}
+  .flow-node .fn-d{width:22px;height:22px;border-radius:50%;margin:0 auto 5px;display:flex;align-items:center;justify-content:center;font-size:10px;border:1.5px solid var(--line);background:#fff;}
+  .flow-node.done .fn-d{background:var(--ok);border-color:var(--ok);color:#fff;}
+  .flow-node.cur .fn-d{border-color:var(--green);color:var(--green);font-weight:700;}
+  .flow-node.done,.flow-node.cur{color:var(--green);}
+
+  /* 员工工作台 */
+  .metrics{display:flex;gap:10px;padding:14px 16px 0;}
+  .metric{flex:1;background:#fff;border:1px solid var(--line);border-radius:var(--r-m);padding:13px 12px;}
+  .metric .k{font-size:11px;color:var(--ink-2);}
+  .metric .v{font-size:24px;font-weight:600;margin-top:5px;}
+  .metric .u{font-size:10.5px;color:var(--ink-3);margin-top:2px;}
+  .status-cards{display:flex;gap:9px;padding:0 16px;}
+  .sc{flex:1;border:1.5px solid var(--line);background:#fff;border-radius:var(--r-m);padding:13px 4px;display:flex;flex-direction:column;align-items:center;gap:7px;font-size:12px;color:var(--ink-2);}
+  .sc svg{width:24px;height:24px;}
+  .sc.on{background:var(--green);border-color:var(--green);color:#fff;font-weight:600;box-shadow:var(--shadow-card);}
+
+  /* 老板端 */
+  .range{display:flex;gap:8px;padding:13px 16px 0;}
+  .bm{flex:1;background:#fff;border:1px solid var(--line);border-radius:var(--r-m);padding:12px 11px;}
+  .bm .k{font-size:10.5px;color:var(--ink-2);}
+  .bm .v{font-size:21px;font-weight:600;margin-top:6px;}
+  .bm .u{font-size:10px;color:var(--ink-3);margin-top:2px;}
+  .bm.gold .v{color:var(--gold-t);}
+  .chart-card{background:#fff;border:1px solid var(--line);border-radius:var(--r-m);margin:12px 16px 0;padding:14px;}
+  .chart-card .lb{font-size:14px;font-weight:600;margin-bottom:14px;}
+  .bars{display:flex;align-items:flex-end;justify-content:space-between;height:104px;padding:0 3px;}
+  .bar{width:26px;display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .bar i{width:100%;border-radius:4px 4px 0 0;background:var(--green);display:block;}
+  .bar.hi i{background:var(--pine);}
+  .bar span{font-size:9.5px;color:var(--ink-3);}
+  .rank-row{display:flex;align-items:center;gap:9px;margin-bottom:11px;}
+  .rank-row:last-child{margin-bottom:0;}
+  .rank-row .no{width:15px;font-size:11px;color:var(--ink-3);font-weight:600;}
+  .rank-row .nm{width:72px;font-size:12px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .rank-row .trk{flex:1;height:7px;border-radius:var(--pill);background:var(--mint);overflow:hidden;}
+  .rank-row .trk i{display:block;height:100%;border-radius:var(--pill);background:var(--green);}
+  .rank-row.top .trk i{background:var(--gold-btn);}
+  .rank-row .ct{width:24px;text-align:right;font-size:11px;color:var(--ink-2);}
+  .perf-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bg);}
+  .perf-row:last-child{border-bottom:none;}
+  .perf-row .avatar{width:32px;height:32px;font-size:10px;box-shadow:none;border:none;}
+  .perf-row .nm{flex:1;font-size:12.5px;font-weight:600;}
+  .perf-row .nm em{font-style:normal;font-weight:400;font-size:10px;color:var(--ink-3);margin-left:5px;}
+  .perf-row .ct{font-size:11.5px;color:var(--ink-2);}
+  .edit-line{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--bg);font-size:13px;gap:12px;}
+  .edit-line .ek{color:var(--ink-3);flex:none;}
+  .edit-line .ev{color:var(--ink);text-align:right;flex:1;}
+  .edit-line input{border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12.5px;width:100%;font-family:inherit;}
+
+  /* CR 新增：储值 / 开单 / 分账 / 规则 */
+  .wallet-hero{background:linear-gradient(135deg,var(--pine),#245241);color:#fff;border-radius:0 0 20px 20px;padding:8px 18px 20px;}
+  .wallet-hero .wl{font-size:11px;opacity:.7;letter-spacing:1px;}
+  .wallet-hero .wbal{font-size:36px;font-weight:600;margin:4px 0 2px;}
+  .wallet-hero .wbal small{font-size:15px;font-weight:400;}
+  .wallet-hero .wsub{font-size:11.5px;opacity:.8;}
+  .wallet-hero .wgrid{display:flex;gap:10px;margin-top:16px;}
+  .wallet-hero .wgrid>div{flex:1;background:rgba(255,255,255,.1);border-radius:var(--r-m);padding:10px 12px;}
+  .wallet-hero .wgrid .k{font-size:10.5px;opacity:.75;}
+  .wallet-hero .wgrid .v{font-size:17px;font-weight:600;margin-top:4px;}
+  .notice{border:1px dashed var(--gold-l);background:rgba(160,124,74,.06);border-radius:var(--r-m);padding:10px 12px;font-size:11px;color:var(--gold-t);line-height:1.8;margin:12px 16px 0;}
+  .ledger-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--bg);}
+  .ledger-item:last-child{border-bottom:none;}
+  .ledger-item .lic{width:34px;height:34px;border-radius:10px;background:var(--mint);color:var(--green);display:flex;align-items:center;justify-content:center;flex:none;font-size:13px;font-weight:600;}
+  .ledger-item .mid{flex:1;min-width:0;}
+  .ledger-item .mid .t{font-size:12.5px;font-weight:600;}
+  .ledger-item .mid .d{font-size:10px;color:var(--ink-3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ledger-item .amt{font-size:14px;font-weight:600;}
+  .ledger-item .amt.plus{color:var(--ok);}
+  .ledger-item .amt.minus{color:var(--gold-t);}
+  .form-grid{padding:12px 16px;}
+  .frow{margin-bottom:12px;}
+  .frow label{display:block;font-size:12px;font-weight:600;margin-bottom:6px;}
+  .frow label i{font-style:normal;color:var(--warn);}
+  .seg{display:flex;gap:8px;flex-wrap:wrap;}
+  .seg button{flex:1;min-width:78px;height:36px;border:1px solid var(--line);background:#fff;border-radius:var(--r-s);font-size:12px;color:var(--ink-2);}
+  .seg button.on{background:var(--green);border-color:var(--green);color:#fff;font-weight:600;}
+  .calc-bar{background:var(--mint);border-radius:var(--r-m);padding:10px 12px;font-size:12px;color:var(--green);line-height:1.7;margin-bottom:12px;}
+  .calc-bar b{font-size:15px;}
+  .comm-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--bg);}
+  .comm-row:last-child{border-bottom:none;}
+  .comm-row .cnm{flex:1;font-size:12.5px;font-weight:600;}
+  .comm-row .cnm em{font-style:normal;font-weight:400;color:var(--ink-3);font-size:10px;margin-left:5px;}
+  .comm-row .cval{text-align:right;font-size:12px;}
+  .comm-row .cval b{color:var(--gold-t);font-size:14px;}
+  .tier-row,.cat-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:12px;}
+  .tier-row input,.cat-row input{height:34px;border:1px solid var(--line);border-radius:6px;padding:0 8px;font-size:12.5px;font-family:inherit;min-width:0;}
+  .tier-row input{width:34%;}
+  .cat-row input{width:46%;}
+
+  /* ===== 右侧：实时数据 ===== */
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+  .stat-box{background:var(--bg);border-radius:var(--r-m);padding:11px 10px;}
+  .stat-box .sk{font-size:10.5px;color:var(--ink-3);}
+  .stat-box .sv{font-size:19px;font-weight:600;margin-top:4px;}
+  .stat-box .sv.gold{color:var(--gold-t);}
+  .log-list{padding:6px 14px 14px;max-height:230px;overflow-y:auto;}
+  .log-item{font-size:11.5px;color:var(--ink-2);padding:7px 0;border-bottom:1px solid var(--bg);line-height:1.5;}
+  .log-item:last-child{border-bottom:none;}
+  .log-item .lt{color:var(--ink-3);font-size:10px;font-family:Consolas,monospace;}
+  .log-item .la{color:var(--green);font-weight:600;}
+
+  /* ===== Toast ===== */
+  .toast{position:fixed;left:50%;top:40px;transform:translateX(-50%) translateY(-20px);background:var(--pine);color:#fff;padding:12px 22px;border-radius:var(--r-m);font-size:13.5px;box-shadow:var(--shadow-float);z-index:99;opacity:0;pointer-events:none;transition:.25s;max-width:80%;text-align:center;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast.warn{background:var(--warn);}
+  .foot-note{margin-top:34px;border-top:1px solid #d9ded8;padding-top:18px;font-size:12px;color:var(--ink-3);line-height:1.9;}
+  .foot-note b{color:var(--ink-2);}
+</style>
+</head>
+<body>
+<!-- 内联图标库 -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-scissors" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.6"/><circle cx="6" cy="18" r="2.6"/><path d="M8.2 7.7 20 18.5M8.2 16.3 20 5.5"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v4.7l3.2 1.9"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c1.2-3.4 4-5 7.5-5s6.3 1.6 7.5 5"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.4"/><path d="M3 19c.9-3 3-4.5 6-4.5s5.1 1.5 6 4.5"/><path d="M16 5.2a3.4 3.4 0 0 1 0 6.6M17.5 14.8c2 .6 3.2 2 3.6 4.2"/></symbol>
+  <symbol id="i-store" viewBox="0 0 24 24"><path d="M4 10l2-5.5h12L20 10"/><path d="M5.5 10v9.5h13V10"/><path d="M9.5 19.5V14h5v5.5"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M7 20v-6M12 20V10M17 20v-8.5"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M10.5 17.5h3"/></symbol>
+  <symbol id="i-loc" viewBox="0 0 24 24"><path d="M12 21c4.4-5 6.8-8.2 6.8-11.3A6.8 6.8 0 0 0 5.2 9.7C5.2 12.8 7.6 16 12 21z"/><circle cx="12" cy="9.6" r="2.4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.5" cy="6.5" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="17.5" r="1"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4.5 10.5 12 4l7.5 6.5"/><path d="M6.5 10.5v9.5h11v-9.5"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5.5M11 5.5 4.5 12 11 18.5"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3.5" y="6" width="17" height="13" rx="2.5"/><path d="M3.5 10h17M15.5 14.5h2"/></symbol>
+  <symbol id="i-swap" viewBox="0 0 24 24"><path d="M4 8h13l-3-3M20 16H7l3 3"/></symbol>
+  <symbol id="i-cog" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.2M12 18.8V21M4.2 12H2M22 12h-2.2M5.5 5.5 7 7M17 17l1.5 1.5M5.5 18.5 7 17M17 7l1.5-1.5"/></symbol>
+</svg>
+
+<div class="demo">
+  <div class="topbar">
+    <div>
+      <div class="cn">森古造型</div>
+      <div class="en">S E N G U</div>
+    </div>
+    <div class="rule"></div>
+    <div style="font-size:15px;font-weight:600;">可点击交互演示</div>
+    <div class="tag">演示环境 · 虚构数据 · 模拟支付不扣款、不收真钱</div>
+  </div>
+
+  <div class="hintbar">
+    <b>怎么玩：</b>先在左侧切换身份（顾客 / 员工 / 老板），再点手机里的按钮操作。左侧「页面直达」可跳到任意页面，右侧实时看数据变化。三端数据是连通的——完整动线：
+    <div class="flow">
+      <span><i>①</i> 顾客提交预约</span>
+      <span><i>②</i> 员工接单→到店→服务→完成（自动开单）</span>
+      <span><i>③</i> 顾客模拟支付 / 员工散客开单→确认线下收款</span>
+      <span><i>④</i> 员工录储值→消费抵扣→老板看分账变化</span>
+      <span><i>⑤</i> 老板看板营收 / 订单管理退款 / 规则设置</span>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- 左侧控制 -->
+    <aside>
+      <div class="panel">
+        <div class="ph">切换身份</div>
+        <div class="pb" id="roleBox"></div>
+      </div>
+      <div class="panel">
+        <div class="ph">页面直达</div>
+        <div class="pb" id="navMap"></div>
+      </div>
+    </aside>
+
+    <!-- 手机 -->
+    <section class="stage">
+      <div class="stage-cap">当前演示：<b id="stageCap">顾客端</b> · 手机内可直接点击</div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen">
+          <div id="sbar" class="sbar"></div>
+          <div id="nav" class="navbar"></div>
+          <div id="viewport" class="viewport"></div>
+          <div id="tabbar" class="tabbar"></div>
+          <div class="home-ind"><i></i></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右侧数据 -->
+    <aside class="monitor">
+      <div class="panel">
+        <div class="ph">实时数据</div>
+        <div class="pb">
+          <div class="stat-grid" id="statGrid"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ph">操作日志</div>
+        <div class="log-list" id="logList"></div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="foot-note">
+    <b>说明</b>：本页是对已开发微信小程序的交互还原演示，用于「点着看一看」体验界面与业务流程。所有门店、项目、发型师、顾客姓名与金额均为<b>虚构演示数据</b>；模拟支付（mock）、现金（cash）、线下扫码（offline_scan）及储值充值/消费/退本金<b>均为演示记录，不接真实资金、不扣款、不收真钱</b>，也没有站外转账品牌与二维码，更没有顾客在线充值付款入口。正式经营需按 P8 完成商家账号与资质配置后另行切换。品牌统一为「森古造型 / SENGU」。
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s);};
+var I=function(n,cls){return '<svg class="ic '+(cls||'')+'"><use href="#'+n+'"/></svg>';};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+function pad(n){return String(n).padStart(2,'0');}
+function dayStr(off){var d=new Date();d.setDate(d.getDate()+(off||0));return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function wd(off){var d=new Date();d.setDate(d.getDate()+(off||0));return '周'+'日一二三四五六'.charAt(d.getDay());}
+function md(off){var d=new Date();d.setDate(d.getDate()+(off||0));return (d.getMonth()+1)+'/'+d.getDate();}
+function now(){var d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());}
+
+/* ============ 初始演示数据 ============ */
+// 头像占位图：内联 SVG data URI，演示"可替换"——正式版由发型师/老板在小程序内上传真实图片
+function svgAvatar(bg,hair,skin){
+  var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">'+
+    '<rect width="100" height="100" rx="50" fill="'+bg+'"/>'+
+    '<circle cx="50" cy="43" r="19" fill="'+skin+'"/>'+
+    '<path d="M29 41a21 21 0 0 1 42 0v-7a21 21 0 0 0-42 0z" fill="'+hair+'"/>'+
+    '<path d="M15 97c3-22 17-32 35-32s32 10 35 32" fill="'+hair+'"/>'+
+    '</svg>';
+  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
+var initState=function(){
+  return {
+    role:'customer',
+    stack:[{page:'customer/index',params:{}}],
+    shop:{name:'森古造型 SENGU',address:'南湖路 88 号 · 森古大厦 1F',hours:'10:00 – 21:00',phone:'0710-8888 6666',intro:'一间收拾得干干净净的高级理发店。留白、线条、一处克制点睛——把「简约现代」写进每一次剪发。'},
+    services:[
+      {id:'P001',name:'总监精剪（含洗吹造型）',price:88,duration:45,category:'精剪',tag:'热门',intro:'创意总监主理，含洗剪吹造型，适合日常修剪与造型调整。'},
+      {id:'P002',name:'资深剪发',price:58,duration:30,category:'精剪',tag:'新客推荐',intro:'10 年经验发型师主理，含洗吹，性价比之选。'},
+      {id:'P003',name:'男士烫发',price:198,duration:120,category:'烫染',tag:'',intro:'潮流烫发造型，含护理，持久有型。'},
+      {id:'P004',name:'质感染发',price:268,duration:150,category:'烫染',tag:'',intro:'进口染膏，色彩均匀饱满，含深层护理。'},
+      {id:'P005',name:'头皮护理',price:128,duration:60,category:'护理',tag:'',intro:'深层清洁与头皮养护，舒缓放松。'},
+      {id:'P006',name:'儿童剪发',price:48,duration:30,category:'儿童剪',tag:'',intro:'专为小朋友设计，温柔耐心。'}
+    ],
+    stylists:[
+      {id:'S001',name:'阿哲',title:'创意总监',specialty:['精剪','造型'],status:'available',avatar:svgAvatar('#DCE9E0','#1E4A3C','#E8C9A8')},
+      {id:'S002',name:'小鹿',title:'烫染师',specialty:['烫染','护理'],status:'available',avatar:svgAvatar('#F3E6D2','#7A5B32','#F0D2B6')},
+      {id:'S003',name:'大山',title:'资深发型师',specialty:['精剪'],status:'resting',avatar:svgAvatar('#DCE5EA','#2B3F4A','#D9B693')},
+      {id:'S004',name:'阿岚',title:'造型师',specialty:['造型','护理'],status:'available',avatar:svgAvatar('#E7E0EE','#4B3A5C','#EDCDB4')}
+    ],
+    bookings:[
+      {no:'BK1001',name:'王小明',phone:'138****1234',serviceId:'P001',serviceName:'总监精剪（含洗吹造型）',price:88,stylistId:'S001',stylistName:'阿哲',date:dayStr(0),time:'10:00-10:45',status:'confirmed',created:dayStr(0)},
+      {no:'BK1002',name:'李女士',phone:'139****5678',serviceId:'P002',serviceName:'资深剪发',price:58,stylistId:'S002',stylistName:'小鹿',date:dayStr(0),time:'11:00-11:30',status:'checked_in',created:dayStr(0)},
+      {no:'BK1003',name:'张先生',phone:'137****9012',serviceId:'P003',serviceName:'男士烫发',price:198,stylistId:'ANY',stylistName:'不指定',date:dayStr(0),time:'14:00-16:00',status:'pending',created:dayStr(0)},
+      {no:'BK1004',name:'陈小姐',phone:'136****3456',serviceId:'P005',serviceName:'头皮护理',price:128,stylistId:'S001',stylistName:'阿哲',date:dayStr(0),time:'15:00-16:00',status:'servicing',created:dayStr(0)},
+      {no:'BK1005',name:'刘女士',phone:'135****7890',serviceId:'P001',serviceName:'总监精剪（含洗吹造型）',price:88,stylistId:'S002',stylistName:'小鹿',date:dayStr(0),time:'16:00-16:45',status:'completed',created:dayStr(0)},
+      {no:'BK1006',name:'周先生',phone:'134****2468',serviceId:'P002',serviceName:'资深剪发',price:58,stylistId:'S003',stylistName:'大山',date:dayStr(0),time:'17:00-17:30',status:'cancelled',created:dayStr(0)},
+      {no:'BK1007',name:'吴女士',phone:'133****1122',serviceId:'P004',serviceName:'质感染发',price:268,stylistId:'S001',stylistName:'阿哲',date:dayStr(1),time:'10:00-12:30',status:'pending',created:dayStr(0)},
+      {no:'BK1008',name:'郑先生',phone:'132****3344',serviceId:'P006',serviceName:'儿童剪发',price:48,stylistId:'ANY',stylistName:'不指定',date:dayStr(-2),time:'15:00-15:30',status:'completed',created:dayStr(-2)}
+    ],
+    orders:[
+      {no:'OD2001',name:'刘女士',serviceName:'总监精剪（含洗吹造型）',amount:88,stylistName:'小鹿',status:'paid',pay:'mock',date:dayStr(0)},
+      {no:'OD2002',name:'赵女士',serviceName:'质感染发',amount:268,stylistName:'阿哲',status:'paid',pay:'mock',date:dayStr(0)},
+      {no:'OD2003',name:'孙先生',serviceName:'男士烫发',amount:198,stylistName:'小鹿',status:'unpaid',pay:'',date:dayStr(0)},
+      {no:'OD2004',name:'周女士',serviceName:'头皮护理',amount:128,stylistName:'阿哲',status:'paid',pay:'mock',date:dayStr(-1)},
+      {no:'OD2005',name:'郑先生',serviceName:'儿童剪发',amount:48,stylistName:'不指定',status:'paid',pay:'mock',date:dayStr(-3)},
+      {no:'OD2006',name:'吴女士',serviceName:'资深剪发',amount:58,stylistName:'小鹿',status:'refunded',pay:'mock',date:dayStr(-6)}
+    ],
+    logs:[
+      {t:'09:12',a:'系统',m:'演示数据已载入'},
+      {t:'10:00',a:'员工',m:'阿哲确认了 BK1001'},
+      {t:'10:40',a:'员工',m:'小鹿将 BK1002 标记为已到店'}
+    ],
+    draft:{serviceId:'P001',stylistId:'ANY',date:0,time:'',name:'',phone:''},
+    filter:{service:'全部',booking:'全部',order:'全部'},
+    bossRange:'today',
+    seq:{bk:1008,od:2006,ml:1002},
+    // CR-01~04 新增状态（全部演示口径，不接真实资金）
+    rules:{
+      commission_rules:{mode:'by_category',flatRate:40,categories:{'剪发':40,'染发':30,'烫发':30,'护理':35},refundDeduct:true,note:'按已支付订单金额×比例；退款单冲减；老板可改（演示）'},
+      deposit_rules:{enabled:true,tiers:[{threshold:1000,bonus:100},{threshold:2000,bonus:250}],validityDays:0,refundPolicy:'未消费本金可退，赠送金按已消费比例扣回',notice:'储值规则以门店公示为准；余额可退（演示）',note:'仅供展示与记录，不接在线支付'}
+    },
+    memberAccounts:[
+      {id:'MA001',name:'李女士',balance:600,bonusBalance:0,totalRecharge:1000}
+    ],
+    memberLedger:[
+      {id:'ML001',name:'李女士',type:'recharge',amount:1000,bonus:100,balanceAfter:1000,bonusAfter:100,pay:'offline_scan',operator:'店主',orderNo:'',remark:'演示充值（不收真钱）',time:'10:05'},
+      {id:'ML002',name:'李女士',type:'consume',amount:-400,bonus:-100,balanceAfter:600,bonusAfter:0,pay:'',operator:'阿哲',orderNo:'OD2001',remark:'消费抵扣（先赠送金后本金）',time:'11:30'}
+    ],
+    walkin:{serviceId:'P001',stylistId:'ANY',name:'',payMethod:'cash',paid:false,amount:''},
+    offlineMethod:'offline_scan',
+    member:{name:'李女士',amount:'',bonusMode:'auto',bonus:'',orderNo:'',pay:'offline_scan',cname:'李女士',camount:'',rname:'李女士',ramount:''}
+  };
+};
+var S=initState();
+
+/* ============ 角色 / 页面定义 ============ */
+var ROLES={
+  customer:{label:'顾客端',desc:'看店 · 预约 · 查订单',icon:'i-user',home:'customer/index',
+    tabs:[
+      {key:'home',title:'首页',icon:'i-home',page:'customer/index'},
+      {key:'services',title:'项目',icon:'i-scissors',page:'customer/services'},
+      {key:'booking',title:'预约',icon:'i-cal',page:'customer/booking'},
+      {key:'mine',title:'我的',icon:'i-user',page:'customer/mine'}
+    ]},
+  staff:{label:'员工端',desc:'接单 · 服务 · 开单',icon:'i-scissors',home:'staff/workbench',
+    tabs:[
+      {key:'workbench',title:'工作台',icon:'i-home',page:'staff/workbench'},
+      {key:'bookings',title:'预约',icon:'i-cal',page:'staff/bookings'},
+      {key:'mine',title:'我的',icon:'i-user',page:'staff/profile'}
+    ]},
+  boss:{label:'老板端',desc:'看数 · 管理 · 收款',icon:'i-chart',home:'boss/dashboard',
+    tabs:[
+      {key:'dashboard',title:'概览',icon:'i-chart',page:'boss/dashboard'},
+      {key:'manage',title:'管理',icon:'i-store',page:'boss/shop'},
+      {key:'bookings',title:'预约',icon:'i-cal',page:'boss/bookings'},
+      {key:'orders',title:'订单',icon:'i-wallet',page:'boss/orders'}
+    ]}
+};
+var PAGES={
+  'customer/index':{title:'森古造型',tab:'home',dark:true},
+  'customer/services':{title:'全部项目',tab:'services'},
+  'customer/stylists':{title:'明星发型师',back:true},
+  'customer/booking':{title:'在线预约',tab:'booking'},
+  'customer/bookings':{title:'我的预约',back:true},
+  'customer/orders':{title:'我的订单',back:true},
+  'customer/mine':{title:'个人中心',tab:'mine'},
+  'staff/workbench':{title:'工作台',tab:'workbench'},
+  'staff/bookings':{title:'我的预约',tab:'bookings'},
+  'staff/booking-detail':{title:'预约详情',back:true},
+  'staff/records':{title:'服务记录',back:true},
+  'staff/profile':{title:'我的资料',tab:'mine'},
+  'staff/role-switch':{title:'身份切换',back:true},
+  'boss/dashboard':{title:'经营概览',tab:'dashboard'},
+  'boss/shop':{title:'门店管理',tab:'manage'},
+  'boss/staff-manage':{title:'员工管理',back:true},
+  'boss/service-manage':{title:'项目管理',back:true},
+  'boss/bookings':{title:'预约管理',tab:'bookings'},
+  'boss/orders':{title:'订单管理',tab:'orders'},
+  'customer/member':{title:'我的储值',back:true},
+  'staff/walkin':{title:'散客开单',back:true},
+  'staff/offline-pay':{title:'确认线下收款',back:true},
+  'staff/member-manage':{title:'会员储值',back:true},
+  'staff/commission':{title:'我的分账',back:true},
+  'boss/walkin':{title:'散客开单',back:true},
+  'boss/offline-pay':{title:'确认线下收款',back:true},
+  'boss/member-manage':{title:'会员储值',back:true},
+  'boss/commission':{title:'分账报表',back:true},
+  'boss/rules':{title:'规则设置',back:true}
+};
+
+/* ============ 状态标签 ============ */
+function stTag(s){
+  var map={
+    pending:['待确认','st-warn'],confirmed:['已确认','st-ok'],checked_in:['已到店','st-ok'],
+    servicing:['服务中','st-ok'],completed:['已完成','st-done'],cancelled:['已取消','st-err'],
+    unpaid:['待支付','st-warn'],paid:['已支付','st-ok'],refunded:['已退款','st-err'],
+    available:['可预约','st-ok'],resting:['休息中','st-warn']
+  };
+  var m=map[s]||[s,'st-done'];
+  return '<span class="st '+m[1]+'">'+m[0]+'</span>';
+}
+var FLOW=['pending','confirmed','checked_in','servicing','completed'];
+var FLOW_LABEL=['待确认','已确认','已到店','服务中','完成'];
+
+/* ============ 工具 ============ */
+function svc(id){return S.services.filter(function(x){return x.id===id;})[0];}
+function sty(id){return S.stylists.filter(function(x){return x.id===id;})[0];}
+function styByName(n){return S.stylists.filter(function(x){return x.name===n;})[0];}
+function myAccount(){return S.memberAccounts.filter(function(a){return a.name==='李女士';})[0]||S.memberAccounts[0];}
+function round2(n){return Math.round((Number(n)||0)*100)/100;}
+function payLabel(pm){return {mock:'模拟支付',cash:'现金（演示）',offline_scan:'线下扫码（演示）'}[pm]||'—';}
+function ruleRate(cat){var r=S.rules.commission_rules;if(r.mode==='by_category'&&r.categories&&r.categories[cat]!=null)return Number(r.categories[cat]);return Number(r.flatRate)||0;}
+function catByName(n){var s=S.services.filter(function(x){return x.name===n;})[0];return s?s.category:'';}
+function bonusFor(amt){var tiers=(S.rules.deposit_rules.tiers||[]).slice().sort(function(a,b){return a.threshold-b.threshold;});var b=0;tiers.forEach(function(t){if(amt>=t.threshold)b=Number(t.bonus)||0;});return round2(b);}
+function accountByName(n){return S.memberAccounts.filter(function(a){return a.name===n;})[0];}
+// 分账计算：paid/completed 计入、refunded 剔除；按 commission_rules 类别比例，员工传 onlyName 只看本人
+function calcCommission(rb,onlyName){
+  var ods=S.orders.filter(function(o){return o.date>=rb.from&&o.date<=rb.to&&(o.status==='paid'||o.status==='completed')&&(!onlyName||o.stylistName===onlyName);});
+  var map={};
+  ods.forEach(function(o){
+    var k=o.stylistName||'未指定';
+    if(!map[k])map[k]={name:k,count:0,amount:0,commission:0,rates:[]};
+    var cat=o.category||catByName(o.serviceName);
+    var rate=ruleRate(cat);
+    map[k].count++;map[k].amount+=o.amount;map[k].commission+=o.amount*rate/100;map[k].rates.push(rate);
+  });
+  var rows=Object.keys(map).map(function(k){
+    var x=map[k],sy=styByName(x.name);
+    return {name:x.name,avatar:sy?sy.avatar:'',count:x.count,amount:round2(x.amount),commission:round2(x.commission),
+      rate:round2(x.rates.reduce(function(a,b){return a+b;},0)/x.rates.length)};
+  }).sort(function(a,b){return b.commission-a.commission;});
+  return {rows:rows,count:ods.length,
+    amount:round2(rows.reduce(function(a,r){return a+r.amount;},0)),
+    commission:round2(rows.reduce(function(a,r){return a+r.commission;},0))};
+}
+function log(a,m){S.logs.unshift({t:now(),a:a,m:m});if(S.logs.length>30)S.logs.pop();}
+var toastTimer;
+function toast(msg,warn){
+  var el=$('#toast');el.textContent=msg;el.className='toast show'+(warn?' warn':'');
+  clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.className='toast';},2400);
+}
+function cur(){return S.stack[S.stack.length-1];}
+function nav(page,params){S.stack.push({page:page,params:params||{}});render();}
+function back(){if(S.stack.length>1){S.stack.pop();render();}}
+function switchTab(key){
+  var role=ROLES[S.role];var t=role.tabs.filter(function(x){return x.key===key;})[0];
+  if(t){S.stack=[{page:t.page,params:{}}];render();}
+}
+function switchRole(r){
+  if(!ROLES[r])return;
+  S.role=r;S.stack=[{page:ROLES[r].home,params:{}}];
+  log('系统','切换到'+ROLES[r].label);
+  render();
+}
+
+/* ============ 页面渲染 ============ */
+function customerHome(){
+  var hot=S.services.slice(0,4).map(function(s){
+    return '<button class="proj-card" data-act="goBook" data-id="'+s.id+'">'+
+      '<div class="pic">'+I('i-scissors')+(s.tag?'<span class="tag">'+s.tag+'</span>':'')+'</div>'+
+      '<div class="bd"><div class="nm">'+esc(s.name)+'</div>'+
+      '<div class="ft"><span class="pr">¥'+s.price+'</span><span class="dur">'+s.duration+' 分钟</span></div></div></button>';
+  }).join('');
+  var sts=S.stylists.filter(function(x){return x.status!=='resting';}).map(function(x){
+    return '<button class="stylist" data-act="nav" data-page="customer/stylists"><img class="avatar" src="'+esc(x.avatar)+'" alt="'+esc(x.name)+'">'+
+      '<div class="nm">'+esc(x.name)+'</div><div class="tt">'+esc(x.title)+'</div><div class="dot">可约</div></button>';
+  }).join('');
+  return '<div class="hero">'+
+      '<div class="shop">'+esc(S.shop.name)+'</div><div class="en">S E N G U</div><div class="gline"></div>'+
+      '<div class="banner">'+I('i-store')+'<span>门店环境图 · 上线后老板可随时更换</span></div>'+
+      '<div class="dots"><i class="on"></i><i></i><i></i></div></div>'+
+    '<div class="info-bar">'+
+      '<div class="cell">'+I('i-loc')+'<b>'+esc(S.shop.address)+'</b></div>'+
+      '<div class="cell">'+I('i-clock')+'<b>'+esc(S.shop.hours)+'</b></div>'+
+      '<div class="cell" data-act="call">'+I('i-phone')+'<b>一键拨号</b></div></div>'+
+    '<div class="quick">'+
+      '<button class="q-main" data-act="tab" data-tab="booking">'+I('i-cal')+'立即预约</button>'+
+      '<button class="q-sec" data-act="tab" data-tab="services">'+I('i-scissors')+'热门项目</button>'+
+      '<button class="q-sec" data-act="nav" data-page="customer/stylists">'+I('i-user')+'明星发型师</button></div>'+
+    '<div class="sec-t"><span class="tt">热门项目</span><span class="more" data-act="tab" data-tab="services">全部'+I('i-right')+'</span></div>'+
+    '<div class="hscroll">'+hot+'</div>'+
+    '<div class="sec-t"><span class="tt">推荐发型师</span><span class="more" data-act="nav" data-page="customer/stylists">全部'+I('i-right')+'</span></div>'+
+    '<div class="hscroll">'+sts+'</div><div style="height:16px"></div>';
+}
+function customerServices(){
+  var cats=['全部','精剪','烫染','护理','儿童剪'];
+  var chips=cats.map(function(c){return '<button class="chip '+(S.filter.service===c?'on':'')+'" data-act="fservice" data-v="'+c+'">'+c+'</button>';}).join('');
+  var list=S.services.filter(function(s){return S.filter.service==='全部'||s.category===S.filter.service;}).map(function(s){
+    return '<button class="li-card" data-act="goBook" data-id="'+s.id+'">'+
+      '<div class="li-top"><span class="li-title">'+esc(s.name)+'</span>'+(s.tag?'<span class="st st-warn">'+s.tag+'</span>':'')+'</div>'+
+      '<div class="li-sub">'+esc(s.intro)+'</div>'+
+      '<div class="li-foot"><span class="no">'+s.duration+' 分钟 · '+s.category+'</span>'+
+      '<span><span class="li-amt">¥'+s.price+'</span> <span style="font-size:11px;color:var(--green);margin-left:8px;">去预约 ›</span></span></div></button>';
+  }).join('');
+  return '<div class="filter-row">'+chips+'</div><div class="list-wrap">'+list+'</div>';
+}
+function customerStylists(){
+  var list=S.stylists.map(function(x){
+    var rest=x.status==='resting';
+    return '<button class="li-card" style="'+(rest?'opacity:.6;':'')+'" data-act="stylistInfo" data-id="'+x.id+'">'+
+      '<div class="li-top" style="gap:12px;"><img class="avatar" src="'+esc(x.avatar)+'" alt="'+esc(x.name)+'">'+
+      '<div style="flex:1;"><div class="li-title">'+esc(x.name)+' <span style="font-size:11px;color:var(--ink-3);font-weight:400;">'+esc(x.title)+'</span></div>'+
+      '<div class="li-sub">擅长：'+x.specialty.map(esc).join(' · ')+'</div></div>'+
+      stTag(rest?'resting':'available')+'</div></button>';
+  }).join('');
+  return '<div class="list-wrap">'+list+
+    '<div class="notice">头像当前为占位图，体现「可替换」：正式版由发型师本人或老板在小程序内上传真实照片后即时生效。</div></div>';
+}
+function customerBooking(){
+  var d=S.draft;
+  // 步骤：根据已选内容推算当前步
+  var step=1;if(d.serviceId)step=2;if(d.stylistId)step=3;if(d.date!==null&&d.time)step=4;
+  var steps=['选项目','选发型师','选时间','确认'].map(function(t,i){
+    var n=i+1,cls=n<step?'done':(n===step?'cur':'');
+    return '<div class="step '+cls+'"><div class="dot">'+(n<step?'✓':n)+'</div>'+t+'</div>';
+  }).join('');
+  var projs=S.services.map(function(s){
+    return '<button class="opt-proj '+(d.serviceId===s.id?'on':'')+'" data-act="dservice" data-id="'+s.id+'">'+
+      '<div class="n">'+esc(s.name)+'</div><div class="p">¥'+s.price+' · '+s.duration+'min</div></button>';
+  }).join('');
+  var stys='<button class="opt-sty '+(d.stylistId==='ANY'?'on':'')+'" data-act="dsty" data-id="ANY"><div class="avatar">任</div>不指定</button>'+
+    S.stylists.map(function(x){
+      var rest=x.status==='resting';
+      return '<button class="opt-sty '+(d.stylistId===x.id?'on':'')+' '+(rest?'dis':'')+'" '+(rest?'disabled':'data-act="dsty" data-id="'+x.id+'"')+'>'+
+        '<img class="avatar" style="width:36px;height:36px;font-size:11px;box-shadow:none;border:none;" src="'+esc(x.avatar)+'" alt="'+esc(x.name)+'">'+esc(x.name)+(rest?'<span style="font-size:9px;">休息中</span>':'')+'</button>';
+    }).join('');
+  var days='';
+  for(var i=0;i<6;i++){
+    days+='<button class="day '+(d.date===i?'on':'')+'" data-act="dday" data-v="'+i+'"><span>'+(i===0?'今天':wd(i))+'</span><b>'+md(i)+'</b></button>';
+  }
+  var slots=['10:00-10:45','11:00-11:45','14:00-14:45','15:00-15:45','16:00-16:45','17:00-17:45','18:00-18:45','19:00-19:45','19:45-20:45'];
+  var dateStr=dayStr(d.date);
+  var times=slots.map(function(t){
+    var occ=S.bookings.filter(function(b){
+      if(b.date!==dateStr||b.status==='cancelled')return false;
+      var matchSty=d.stylistId==='ANY'?true:(b.stylistId===d.stylistId||b.stylistId==='ANY');
+      return matchSty&&b.time===t;
+    }).length>0;
+    var dis=occ;
+    return '<button class="tm '+(d.time===t?'on':'')+' '+(dis?'dis':'')+'" '+(dis?'disabled':'data-act="dtime" data-v="'+t+'"')+'>'+t.split('-')[0]+'</button>';
+  }).join('');
+  var selSvc=svc(d.serviceId);
+  var sum=selSvc?(selSvc.name+' · '+d.time.split('-')[0]):'尚未选全';
+  return '<div class="steps">'+steps+'</div>'+
+    '<div class="bk-sec"><div class="lb">① 选择项目</div><div class="opt-row">'+projs+'</div></div>'+
+    '<div class="bk-sec"><div class="lb">② 选择发型师 <em>第一个为「不指定」</em></div><div class="opt-row">'+stys+'</div></div>'+
+    '<div class="bk-sec"><div class="lb">③ 选择时间 <em>灰色划线为已被预约</em></div><div class="days">'+days+'</div><div class="times">'+times+'</div></div>'+
+    '<div class="bk-sec"><div class="lb">④ 联系信息</div>'+
+      '<div class="fcell"><label><i>＊</i> 姓名</label><div class="input"><input id="bkName" placeholder="用于到店确认" value="'+esc(d.name)+'"></div></div>'+
+      '<div class="fcell" style="margin-bottom:2px;"><label><i>＊</i> 手机号</label><div class="input"><input id="bkPhone" type="tel" placeholder="请输入 11 位手机号" value="'+esc(d.phone)+'"></div></div></div>'+
+    '<div class="submit-bar"><div class="sum">已选：<b>'+esc(sum)+'</b><br><span style="font-size:10px;">到店付款 · 本期不收定金</span></div>'+
+      '<button class="btn btn-main" data-act="submitBook">提交预约</button></div>'+
+    '<div class="safe-tip">此处按机型自动预留底部安全区，不被手机小黑条挡住</div>';
+}
+function bookingCards(list,role){
+  if(!list.length)return '<div class="empty">'+I('i-list')+'<div>暂无记录</div></div>';
+  return list.map(function(b){
+    var act='';
+    if(role==='customer'&&b.status==='pending')act='<button class="btn btn-sec btn-sm" data-act="cancelBook" data-no="'+b.no+'">取消预约</button>';
+    if(role==='staff')act='<button class="btn btn-sec btn-sm" data-act="openBkDetail" data-no="'+b.no+'">查看详情 ›</button>';
+    return '<div class="li-card">'+
+      '<div class="li-top"><span class="li-title">'+esc(b.serviceName)+'</span>'+stTag(b.status)+'</div>'+
+      '<div class="li-sub">'+esc(b.date)+' '+esc(b.time)+' · '+esc(b.stylistName)+'<br>联系人：'+esc(b.name)+'</div>'+
+      '<div class="li-foot"><span class="no">'+b.no+'</span>'+act+'</div></div>';
+  }).join('');
+}
+function customerBookings(){
+  var f=S.filter.booking;
+  var list=S.bookings.filter(function(b){return f==='全部'||b.status===f;});
+  var chips=['全部','待确认','已确认','已完成','已取消'].map(function(c){
+    var v=c==='全部'?'全部':({'待确认':'pending','已确认':'confirmed','已完成':'completed','已取消':'cancelled'}[c]);
+    return '<button class="chip '+(f===v?'on':'')+'" data-act="fbooking" data-v="'+v+'">'+c+'</button>';
+  }).join('');
+  return '<div class="filter-row">'+chips+'</div><div class="list-wrap">'+bookingCards(list,'customer')+'</div>';
+}
+function orderCards(list,role){
+  if(!list.length)return '<div class="empty">'+I('i-wallet')+'<div>暂无订单</div></div>';
+  return list.map(function(o){
+    var act='';
+    if(role==='customer'&&o.status==='unpaid')act='<button class="btn btn-main btn-sm" data-act="pay" data-no="'+o.no+'">模拟支付</button>';
+    if(role==='boss'&&(o.status==='paid'))act='<button class="btn btn-sec btn-sm" data-act="refund" data-no="'+o.no+'">模拟退款</button>';
+    return '<div class="li-card">'+
+      '<div class="li-top"><span class="li-title">'+esc(o.serviceName)+'</span>'+stTag(o.status)+'</div>'+
+      '<div class="li-sub">'+esc(o.date)+' · '+esc(o.stylistName)+' · 顾客 '+esc(o.name)+'</div>'+
+      '<div class="li-foot"><span class="no">'+o.no+'</span><span>'+act+' <span class="li-amt">¥'+o.amount+'</span></span></div></div>';
+  }).join('');
+}
+function customerOrders(){
+  var f=S.filter.order;
+  var list=S.orders.filter(function(o){return f==='全部'||o.status===f;});
+  var chips=['全部','待支付','已支付','已退款'].map(function(c){
+    var v=c==='全部'?'全部':({'待支付':'unpaid','已支付':'paid','已退款':'refunded'}[c]);
+    return '<button class="chip '+(f===v?'on':'')+'" data-act="forder" data-v="'+v+'">'+c+'</button>';
+  }).join('');
+  return '<div class="filter-row">'+chips+'</div><div class="list-wrap">'+orderCards(list,'customer')+
+    '<div style="font-size:10.5px;color:var(--ink-3);text-align:center;padding:14px 0;">模拟支付（mock）：不扣款、不收真钱，仅演示业务流程</div></div>';
+}
+function customerMine(){
+  return '<div class="hero" style="border-radius:0 0 18px 18px;">'+
+      '<div style="display:flex;align-items:center;gap:14px;padding:6px 0 14px;">'+
+      '<div class="avatar" style="width:56px;height:56px;background:rgba(255,255,255,.16);color:#fff;">李</div>'+
+      '<div><div style="font-size:18px;font-weight:600;">李女士</div><div style="font-size:11px;opacity:.7;margin-top:4px;">138****0001 · 顾客</div></div></div>'+
+      '<div class="en" style="letter-spacing:4px;">S E N G U</div></div>'+
+    '<div class="list-wrap">'+
+      '<button class="li-card" data-act="nav" data-page="customer/bookings"><div class="li-top"><span class="li-title">我的预约</span>'+I('i-right')+'</div><div class="li-sub">查看全部预约与状态</div></button>'+
+      '<button class="li-card" data-act="nav" data-page="customer/orders"><div class="li-top"><span class="li-title">我的订单</span>'+I('i-right')+'</div><div class="li-sub">待支付订单可模拟支付</div></button>'+
+      '<button class="li-card" data-act="nav" data-page="customer/member"><div class="li-top"><span class="li-title">'+I('i-wallet')+' &nbsp;我的储值</span>'+I('i-right')+'</div><div class="li-sub">本金 ¥'+(myAccount()?myAccount().balance:0)+' · 赠送金 ¥'+(myAccount()?myAccount().bonusBalance:0)+' · 余额与流水可查</div></button>'+
+      '<button class="li-card" data-act="nav" data-page="staff/role-switch"><div class="li-top"><span class="li-title">切换身份</span>'+I('i-right')+'</div><div class="li-sub">体验员工端 / 老板端</div></button>'+
+      '<div style="font-size:11px;color:var(--ink-3);text-align:center;padding:20px 0;">森古造型 SENGU · 演示版本</div></div>';
+}
+
+/* ---- 员工端 ---- */
+function staffWorkbench(){
+  var todayBk=S.bookings.filter(function(b){return b.date===dayStr(0)&&b.status!=='cancelled';});
+  var pending=S.bookings.filter(function(b){return b.status==='pending';});
+  var mySty=S.stylists[0];
+  var scs=[['available','可预约','i-check'],['servicing','服务中','i-scissors'],['resting','休息中','i-clock']].map(function(x){
+    return '<button class="sc '+(mySty.status===x[0]?'on':'')+'" data-act="setWork" data-v="'+x[0]+'">'+I(x[2])+x[1]+'</button>';
+  }).join('');
+  var quick=todayBk.slice(0,4).map(function(b){
+    return '<button class="li-card" style="margin-bottom:9px;" data-act="openBkDetail" data-no="'+b.no+'">'+
+      '<div class="li-top"><span style="font-weight:600;font-size:13px;">'+b.time.split('-')[0]+' · '+esc(b.name)+'</span>'+stTag(b.status)+'</div>'+
+      '<div class="li-sub">'+esc(b.serviceName)+' · '+esc(b.stylistName)+'</div></button>';
+  }).join('');
+  return '<div class="metrics">'+
+      '<div class="metric"><div class="k">今日预约</div><div class="v">'+todayBk.length+'</div><div class="u">单</div></div>'+
+      '<div class="metric"><div class="k">待处理</div><div class="v">'+pending.length+'</div><div class="u">单待确认</div></div></div>'+
+    '<div class="sec-t"><span class="tt">我的工作状态</span><span class="more">点击切换</span></div>'+
+    '<div class="status-cards">'+scs+'</div>'+
+    '<div class="sec-t"><span class="tt">快捷操作</span><span class="more">演示入口</span></div>'+
+    '<div class="list-wrap" style="padding-top:0;display:grid;grid-template-columns:1fr 1fr;gap:9px;">'+
+      '<button class="btn btn-main btn-sm" data-act="nav" data-page="staff/walkin">散客开单</button>'+
+      '<button class="btn btn-sec btn-sm" data-act="nav" data-page="staff/offline-pay">确认线下收款</button>'+
+      '<button class="btn btn-sec btn-sm" data-act="nav" data-page="staff/member-manage">会员储值</button>'+
+      '<button class="btn btn-sec btn-sm" data-act="nav" data-page="staff/commission">我的分账</button></div>'+
+    '<div class="sec-t"><span class="tt">今日预约速览</span><span class="more" data-act="tab" data-tab="bookings">全部'+I('i-right')+'</span></div>'+
+    '<div class="list-wrap" style="padding-top:0;">'+quick+'</div>';
+}
+function staffBookings(){
+  var f=S.filter.booking;
+  var list=S.bookings.filter(function(b){return b.status!=='cancelled'&&(f==='全部'||b.status===f);});
+  var chips=['全部','待确认','已确认','服务中','已完成'].map(function(c){
+    var v={'全部':'全部','待确认':'pending','已确认':'confirmed','服务中':'servicing','已完成':'completed'}[c];
+    return '<button class="chip '+(f===v?'on':'')+'" data-act="fbooking" data-v="'+v+'">'+c+'</button>';
+  }).join('');
+  return '<div class="filter-row">'+chips+'</div><div class="list-wrap">'+bookingCards(list,'staff')+'</div>';
+}
+function staffBookingDetail(no){
+  var b=S.bookings.filter(function(x){return x.no===no;})[0];
+  if(!b)return '<div class="empty">预约不存在</div>';
+  var idx=FLOW.indexOf(b.status);
+  var flow=FLOW.map(function(s,i){
+    var cls=i<idx?'done':(i===idx?'cur':'');
+    return '<div class="flow-node '+cls+'"><div class="fn-d">'+(i<idx?'✓':(i+1))+'</div>'+FLOW_LABEL[i]+'</div>';
+  }).join('');
+  var nextMap={pending:['confirmed','确认接单'],confirmed:['checked_in','确认到店'],checked_in:['servicing','开始服务'],servicing:['completed','完成服务']};
+  var btn='';
+  if(b.status==='cancelled')btn='<div style="font-size:12px;color:var(--err);text-align:center;">该预约已取消</div>';
+  else if(b.status==='completed')btn='<div style="font-size:12px;color:var(--ok);text-align:center;">服务已完成，订单已自动生成</div>';
+  else{var nx=nextMap[b.status];btn='<button class="btn btn-main btn-block" data-act="advance" data-no="'+b.no+'" data-to="'+nx[0]+'">'+nx[1]+'</button>';}
+  return '<div class="detail-hero"><div class="dh-t">'+esc(b.serviceName)+' '+stTag(b.status)+'</div>'+
+      '<div style="font-size:12px;color:var(--ink-2);margin-top:6px;">'+b.no+'</div></div>'+
+    '<div class="detail-block"><h4>预约进度</h4><div class="flow-steps">'+flow+'</div></div>'+
+    '<div class="detail-block"><h4>预约信息</h4>'+
+      '<div class="kv"><span class="k">顾客</span><span class="v">'+esc(b.name)+'</span></div>'+
+      '<div class="kv"><span class="k">联系电话</span><span class="v">'+esc(b.phone)+'</span></div>'+
+      '<div class="kv"><span class="k">日期时间</span><span class="v">'+esc(b.date)+' '+esc(b.time)+'</span></div>'+
+      '<div class="kv"><span class="k">发型师</span><span class="v">'+esc(b.stylistName)+'</span></div>'+
+      '<div class="kv"><span class="k">金额</span><span class="v gold">¥'+b.price+'</span></div></div>'+
+    '<div class="action-strip">'+btn+'</div>';
+}
+function staffRecords(){
+  var list=S.orders.slice().reverse();
+  return '<div class="list-wrap"><div style="font-size:11.5px;color:var(--ink-3);margin-bottom:10px;">已完成服务自动生成的订单记录</div>'+
+    list.map(function(o){return '<div class="li-card"><div class="li-top"><span class="li-title">'+esc(o.serviceName)+'</span>'+stTag(o.status)+'</div>'+
+      '<div class="li-sub">'+esc(o.date)+' · 顾客 '+esc(o.name)+'</div>'+
+      '<div class="li-foot"><span class="no">'+o.no+'</span><span class="li-amt">¥'+o.amount+'</span></div></div>';}).join('')+'</div>';
+}
+function staffProfile(){
+  var me=S.stylists[0];
+  return '<div class="detail-hero"><div style="display:flex;align-items:center;gap:14px;"><img class="avatar" style="width:56px;height:56px;" src="'+esc(me.avatar)+'" alt="'+esc(me.name)+'">'+
+      '<div><div style="font-size:17px;font-weight:600;">'+esc(me.name)+'</div><div style="font-size:11.5px;color:var(--ink-2);margin-top:4px;">'+esc(me.title)+' · 员工</div></div></div></div>'+
+    '<div class="detail-block"><h4>个人资料（员工本人可编辑）</h4>'+
+      '<div class="kv"><span class="k">擅长</span><span class="v">'+me.specialty.map(esc).join(' · ')+'</span></div>'+
+      '<div class="kv"><span class="k">简介</span><span class="v">用心剪好每一个头</span></div>'+
+      '<div class="kv"><span class="k">作品图</span><span class="v" style="color:var(--ink-3);">暂无作品图</span></div>'+
+      '<button class="btn btn-sec btn-block" style="margin-top:12px;" data-act="changeAvatar" data-role="staff">更换我的头像（演示）</button></div>'+
+    '<div class="list-wrap"><button class="li-card" data-act="nav" data-page="staff/commission"><div class="li-top"><span class="li-title">我的分账</span>'+I('i-right')+'</div><div class="li-sub">仅看本人服务订单的模拟分账</div></button>'+
+      '<button class="li-card" data-act="nav" data-page="staff/records"><div class="li-top"><span class="li-title">服务记录</span>'+I('i-right')+'</div></button>'+
+      '<button class="li-card" data-act="nav" data-page="staff/role-switch"><div class="li-top"><span class="li-title">切换身份</span>'+I('i-right')+'</div></button></div>';
+}
+function roleSwitch(){
+  return '<div class="list-wrap"><div style="font-size:12px;color:var(--ink-2);margin-bottom:14px;line-height:1.8;">本产品是<strong>一个小程序、三种身份</strong>。当前视角决定你能看到哪些数据和操作。真实判权由后端完成——这里切换只是演示。</div>'+
+    Object.keys(ROLES).map(function(r){
+      return '<button class="li-card" data-act="switchRole" data-role="'+r+'" style="'+(S.role===r?'border-color:var(--green);background:var(--mint);':'')+'">'+
+        '<div class="li-top"><span class="li-title">'+I(ROLES[r].icon)+' &nbsp;'+ROLES[r].label+(S.role===r?'（当前）':'')+'</span>'+I('i-right')+'</div>'+
+        '<div class="li-sub">'+ROLES[r].desc+'</div></button>';
+    }).join('')+'</div>';
+}
+
+/* ---- 老板端 ---- */
+function rangeBounds(){
+  var r=S.bossRange;
+  if(r==='today')return {from:dayStr(0),to:dayStr(0)};
+  if(r==='week')return {from:dayStr(-((new Date().getDay()+6)%7)),to:dayStr(0)};
+  return {from:dayStr(0).slice(0,8)+'01',to:dayStr(0)};
+}
+function bossDashboard(){
+  var rb=rangeBounds();
+  var bks=S.bookings.filter(function(b){return b.date>=rb.from&&b.date<=rb.to;});
+  var ods=S.orders.filter(function(o){return o.date>=rb.from&&o.date<=rb.to;});
+  var revenue=ods.filter(function(o){return o.status==='paid'||o.status==='completed';}).reduce(function(a,o){return a+o.amount;},0);
+  var ranges=[['today','今日'],['week','本周'],['month','本月']].map(function(x){
+    return '<button class="chip '+(S.bossRange===x[0]?'on':'')+'" data-act="range" data-v="'+x[0]+'">'+x[1]+'</button>';
+  }).join('');
+  var bars=[3,5,4,7,6,9,Math.max(4,bks.length)].map(function(v,i){
+    return '<div class="bar '+(i===6?'hi':'')+'"><i style="height:'+Math.min(100,v*9)+'px"></i><span>'+(i===6?'今天':'周'+'一二三四五六'.charAt(i))+'</span></div>';
+  }).join('');
+  var hotMap={};bks.forEach(function(b){hotMap[b.serviceName]=(hotMap[b.serviceName]||0)+1;});
+  var hot=Object.keys(hotMap).map(function(k){return {n:k,c:hotMap[k]};}).sort(function(a,b){return b.c-a.c;}).slice(0,4);
+  var max=hot.length?hot[0].c:1;
+  var hotHtml=hot.map(function(x,i){return '<div class="rank-row '+(i===0?'top':'')+'"><span class="no">'+(i+1)+'</span><span class="nm">'+esc(x.n)+'</span><span class="trk"><i style="width:'+Math.round(x.c/max*100)+'%"></i></span><span class="ct">'+x.c+'</span></div>';}).join('');
+  var perfMap={};ods.forEach(function(o){if(!perfMap[o.stylistName])perfMap[o.stylistName]={n:o.stylistName,o:0,r:0};perfMap[o.stylistName].o++;if(o.status==='paid')perfMap[o.stylistName].r+=o.amount;});
+  var perf=Object.values(perfMap).sort(function(a,b){return b.r-a.r;});
+  var perfHtml=perf.map(function(x){var av=(styByName(x.n)||{}).avatar||'';return '<div class="perf-row">'+(av?'<img class="avatar" src="'+esc(av)+'" alt="'+esc(x.n)+'">':'<div class="avatar">'+esc(x.n)+'</div>')+'<div class="nm">'+esc(x.n)+'</div><div class="ct">'+x.o+' 单 · ¥'+x.r+'</div></div>';}).join('');
+  return '<div class="range">'+ranges+'</div>'+
+    '<div class="metrics">'+
+      '<div class="bm"><div class="k">预约数</div><div class="v">'+bks.length+'</div><div class="u">单</div></div>'+
+      '<div class="bm"><div class="k">订单数</div><div class="v">'+ods.length+'</div><div class="u">单</div></div>'+
+      '<div class="bm gold"><div class="k">营业额</div><div class="v">¥'+revenue+'</div><div class="u">模拟数据</div></div></div>'+
+    '<div class="chart-card"><div class="lb">预约趋势</div><div class="bars">'+bars+'</div></div>'+
+    '<div class="chart-card"><div class="lb">热门项目排行</div>'+(hotHtml||'<div style="font-size:12px;color:var(--ink-3);">暂无数据</div>')+'</div>'+
+    '<div class="chart-card"><div class="lb">发型师业绩</div>'+(perfHtml||'<div style="font-size:12px;color:var(--ink-3);">暂无数据</div>')+'</div>'+
+    '<div class="list-wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'+
+      '<button class="btn btn-main btn-sm" data-act="nav" data-page="boss/commission">分账报表</button>'+
+      '<button class="btn btn-sec btn-sm" data-act="nav" data-page="boss/walkin">散客开单</button>'+
+      '<button class="btn btn-sec btn-sm" data-act="nav" data-page="boss/offline-pay">确认线下收款</button>'+
+      '<button class="btn btn-sec btn-sm" data-act="nav" data-page="boss/rules">规则设置</button>'+
+      '<button class="btn btn-sec btn-sm" data-act="nav" data-page="boss/orders">订单管理</button>'+
+      '<button class="btn btn-sec btn-sm" data-act="nav" data-page="boss/bookings">预约管理</button></div>';
+}
+function bossShop(){
+  return '<div class="list-wrap">'+
+    '<div class="card" style="padding:14px;">'+
+      '<div class="edit-line"><span class="ek">门店名称</span><span class="ev">'+esc(S.shop.name)+'</span></div>'+
+      '<div class="edit-line"><span class="ek">地址</span><span class="ev">'+esc(S.shop.address)+'</span></div>'+
+      '<div class="edit-line"><span class="ek">营业时间</span><span class="ev">'+esc(S.shop.hours)+'</span></div>'+
+      '<div class="edit-line"><span class="ek">电话</span><span class="ev">'+esc(S.shop.phone)+'</span></div>'+
+      '<div style="font-size:11px;color:var(--ink-3);margin-top:12px;line-height:1.7;">'+esc(S.shop.intro)+'</div>'+
+      '<button class="btn btn-sec btn-block" style="margin-top:14px;" data-act="editShop">编辑门店信息</button>'+
+    '</div>'+
+    '<button class="li-card" data-act="nav" data-page="boss/staff-manage" style="margin-top:12px;"><div class="li-top"><span class="li-title">'+I('i-users')+' &nbsp;员工管理</span>'+I('i-right')+'</div><div class="li-sub">新增 / 停用员工，设置角色</div></button>'+
+    '<button class="li-card" data-act="nav" data-page="boss/service-manage"><div class="li-top"><span class="li-title">'+I('i-list')+' &nbsp;项目管理</span>'+I('i-right')+'</div><div class="li-sub">上架 / 下架项目，调整价格</div></button>'+
+    '<button class="li-card" data-act="nav" data-page="boss/rules"><div class="li-top"><span class="li-title">'+I('i-cog')+' &nbsp;提成 / 储值规则</span>'+I('i-right')+'</div><div class="li-sub">老板可改分账比例与储值赠送档位</div></button>'+
+    '<button class="li-card" data-act="nav" data-page="boss/member-manage"><div class="li-top"><span class="li-title">'+I('i-wallet')+' &nbsp;会员储值管理</span>'+I('i-right')+'</div><div class="li-sub">录储值 / 消费抵扣 / 退本金（演示）</div></button>'+
+    '</div>';
+}
+function bossStaffManage(){
+  var list=S.stylists.map(function(x){
+    return '<div class="li-card"><div class="li-top" style="gap:10px;"><img class="avatar" style="width:40px;height:40px;" src="'+esc(x.avatar||'')+'" alt="'+esc(x.name)+'"><span class="li-title" style="flex:1;">'+esc(x.name)+' <span style="font-size:11px;color:var(--ink-3);font-weight:400;">'+esc(x.title)+'</span></span>'+stTag(x.status==='available'?'confirmed':'resting')+'</div>'+
+      '<div class="li-sub">擅长：'+x.specialty.map(esc).join(' · ')+'</div>'+
+      '<div class="li-foot"><button class="btn btn-sec btn-sm" data-act="changeAvatar" data-id="'+x.id+'">更换头像</button>'+
+      '<button class="btn '+(x.status==='available'?'btn-sec':'btn-main')+' btn-sm" data-act="toggleStaff" data-id="'+x.id+'">'+(x.status==='available'?'设为休息':'启用' )+'</button></div></div>';
+  }).join('');
+  return '<div class="list-wrap"><div style="font-size:11.5px;color:var(--ink-3);margin-bottom:10px;">员工状态影响顾客端「可预约发型师」列表</div>'+list+
+    '<button class="btn btn-main btn-block" style="margin-top:8px;" data-act="addStaff">+ 新增员工</button></div>';
+}
+function bossServiceManage(){
+  var list=S.services.map(function(s){
+    return '<div class="li-card"><div class="li-top"><span class="li-title">'+esc(s.name)+'</span><span class="li-amt">¥'+s.price+'</span></div>'+
+      '<div class="li-sub">'+s.duration+' 分钟 · '+s.category+'</div>'+
+      '<div class="li-foot"><span class="no">'+s.id+'</span>'+
+      '<button class="btn btn-sec btn-sm" data-act="toggleService" data-id="'+s.id+'">上架中 · 点击下架</button></div></div>';
+  }).join('');
+  return '<div class="list-wrap"><div style="font-size:11.5px;color:var(--ink-3);margin-bottom:10px;">上下架与改价实时影响顾客端项目与预约</div>'+list+
+    '<button class="btn btn-main btn-block" style="margin-top:8px;" data-act="addService">+ 新增项目</button></div>';
+}
+function bossBookings(){
+  var list=S.bookings.slice().sort(function(a,b){return (b.date+b.time).localeCompare(a.date+a.time);});
+  return '<div class="list-wrap">'+list.map(function(b){
+    return '<div class="li-card"><div class="li-top"><span class="li-title">'+esc(b.name)+' · '+esc(b.serviceName)+'</span>'+stTag(b.status)+'</div>'+
+      '<div class="li-sub">'+esc(b.date)+' '+esc(b.time)+' · '+esc(b.stylistName)+'<br>￥'+b.price+'</div>'+
+      '<div class="li-foot"><span class="no">'+b.no+'</span><button class="btn btn-sec btn-sm" data-act="assign" data-no="'+b.no+'">分配发型师</button></div></div>';
+  }).join('')+'</div>';
+}
+function bossOrders(){
+  var f=S.filter.order;
+  var list=S.orders.filter(function(o){return f==='全部'||o.status===f;});
+  var chips=['全部','待支付','已支付','已退款'].map(function(c){
+    var v=c==='全部'?'全部':({'待支付':'unpaid','已支付':'paid','已退款':'refunded'}[c]);
+    return '<button class="chip '+(f===v?'on':'')+'" data-act="forder" data-v="'+v+'">'+c+'</button>';
+  }).join('');
+  var total=list.filter(function(o){return o.status==='paid';}).reduce(function(a,o){return a+o.amount;},0);
+  return '<div class="filter-row">'+chips+'</div><div class="list-wrap">'+
+    '<div class="card" style="padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">'+
+      '<span style="font-size:12px;color:var(--ink-2);">当前筛选已支付合计</span><span class="li-amt">¥'+total+'</span></div>'+
+    orderCards(list,'boss')+'</div>';
+}
+
+/* ---- CR 新增页面：储值 / 散客开单 / 线下收款 / 分账 / 规则 ---- */
+function customerMember(){
+  var a=myAccount()||{balance:0,bonusBalance:0,totalRecharge:0};
+  var ledger=S.memberLedger.filter(function(l){return l.name==='李女士';}).slice().reverse();
+  var list=ledger.map(function(l){
+    var inc=l.type==='recharge';
+    var desc={recharge:'储值充值',consume:'消费抵扣',refund:'退本金'}[l.type]||l.type;
+    return '<div class="ledger-item"><div class="lic">'+I(inc?'i-wallet':'i-swap')+'</div>'+
+      '<div class="mid"><div class="t">'+desc+' <span style="font-weight:400;color:var(--ink-3);font-size:10px;">'+esc(l.time)+'</span></div>'+
+      '<div class="d">'+(esc(l.remark)||'')+(l.orderNo?' · '+esc(l.orderNo):'')+(l.pay?' · '+payLabel(l.pay):'')+'</div></div>'+
+      '<div class="amt '+(inc?'plus':'minus')+'">'+(inc?'+':'-')+'¥'+Math.abs(l.amount)+'</div></div>';
+  }).join('');
+  var dr=S.rules.deposit_rules;
+  var tiers=(dr.tiers||[]).map(function(t){return '满 ¥'+t.threshold+' 赠 ¥'+t.bonus;}).join('；');
+  return '<div class="wallet-hero">'+
+      '<div class="wl">SENGU · 我的储值（演示）</div>'+
+      '<div class="wbal"><small>¥</small>'+a.balance+'</div>'+
+      '<div class="wsub">本金余额 · 消费时赠送金优先抵扣</div>'+
+      '<div class="wgrid"><div><div class="k">赠送金余额</div><div class="v">¥'+a.bonusBalance+'</div></div>'+
+      '<div><div class="k">累计充值</div><div class="v">¥'+a.totalRecharge+'</div></div></div></div>'+
+    '<div class="notice">'+esc(dr.notice)+'<br>'+esc(dr.refundPolicy)+'<br>'+esc(dr.note)+'</div>'+
+    '<div class="sec-t"><span class="tt">储值规则公示</span><span class="more">老板可配置</span></div>'+
+    '<div class="card" style="margin:0 16px;padding:12px 14px;">'+
+      '<div class="kv"><span class="k">赠送档位</span><span class="v">'+esc(tiers)+'</span></div>'+
+      '<div class="kv"><span class="k">有效期</span><span class="v">'+(dr.validityDays?dr.validityDays+' 天':'不限')+'</span></div>'+
+      '<div class="kv"><span class="k">退款政策</span><span class="v">未消费本金可退</span></div></div>'+
+    '<div class="sec-t"><span class="tt">储值流水</span><span class="more">最近 '+ledger.length+' 条</span></div>'+
+    '<div class="card" style="margin:0 16px;padding:4px 14px;">'+(list||'<div class="empty" style="padding:30px 0;">暂无流水</div>')+'</div>'+
+    '<div class="notice" style="margin-bottom:18px;">本页为演示数据：不接在线支付、不收真钱、无顾客在线充值入口；余额与流水仅供查看，退款按门店公示规则执行。</div>';
+}
+function walkinPage(role){
+  var w=S.walkin;
+  var projs=S.services.map(function(s){
+    return '<button class="opt-proj '+(w.serviceId===s.id?'on':'')+'" data-act="wservice" data-id="'+s.id+'"><div class="n">'+esc(s.name)+'</div><div class="p">¥'+s.price+' · '+s.duration+'min</div></button>';
+  }).join('');
+  var stys='<button class="opt-sty '+(w.stylistId==='ANY'?'on':'')+'" data-act="wsty" data-id="ANY"><div class="avatar">任</div>不指定</button>'+
+    S.stylists.filter(function(x){return x.status!=='resting';}).map(function(x){
+      return '<button class="opt-sty '+(w.stylistId===x.id?'on':'')+'" data-act="wsty" data-id="'+x.id+'"><img class="avatar" style="width:36px;height:36px;font-size:11px;box-shadow:none;border:none;" src="'+esc(x.avatar)+'" alt="'+esc(x.name)+'">'+esc(x.name)+'</button>';
+    }).join('');
+  var pays=['cash','offline_scan'].map(function(pm){return '<button class="'+(w.payMethod===pm?'on':'')+'" data-act="wpay" data-v="'+pm+'">'+payLabel(pm)+'</button>';}).join('');
+  var paidSeg='<button class="'+(w.paid===false?'on':'')+'" data-act="wpaid" data-v="0">开单后待收款</button><button class="'+(w.paid===true?'on':'')+'" data-act="wpaid" data-v="1">当场已收款</button>';
+  var sv=svc(w.serviceId),amt=sv?sv.price:0;
+  return '<div class="notice" style="margin-top:12px;">散客开单不依赖预约（bookingNo=null，来源=walkin）。现金/线下扫码仅为演示记录，不接真实资金、不收真钱。</div>'+
+    '<div class="bk-sec"><div class="lb">① 选择项目</div><div class="opt-row">'+projs+'</div></div>'+
+    '<div class="bk-sec"><div class="lb">② 选择发型师</div><div class="opt-row">'+stys+'</div></div>'+
+    '<div class="form-grid">'+
+      '<div class="frow"><label><i>＊</i> 顾客姓名</label><div class="input"><input id="wName" placeholder="到店顾客姓名" value="'+esc(w.name)+'"></div></div>'+
+      '<div class="frow"><label>金额（默认项目价，老板可覆盖）</label><div class="calc-bar">项目价 ¥'+amt+(role==='boss'?' · 老板可在下方输入覆盖金额':' · 员工按项目价开单')+'</div>'+
+        (role==='boss'?'<div class="input"><input id="wAmount" type="number" min="1" placeholder="留空则取项目价 ¥'+amt+'" value="'+esc(w.amount)+'"></div>':'')+'</div>'+
+      '<div class="frow"><label>收款方式（演示记录）</label><div class="seg">'+pays+'</div></div>'+
+      '<div class="frow"><label>收款状态</label><div class="seg">'+paidSeg+'</div></div>'+
+    '</div>'+
+    '<div class="submit-bar"><div class="sum">金额：<b>¥'+((role==='boss'&&w.amount)?esc(w.amount):amt)+'</b><br><span style="font-size:10px;">'+payLabel(w.payMethod)+' · 演示不扣款</span></div>'+
+      '<button class="btn btn-main" data-act="doWalkin" data-role="'+role+'">确认开单</button></div>';
+}
+function offlinePayPage(role){
+  var list=S.orders.filter(function(o){return o.status==='unpaid';});
+  var pays=['cash','offline_scan'].map(function(pm){return '<button class="'+(S.offlineMethod===pm?'on':'')+'" data-act="setOfflineMethod" data-v="'+pm+'">'+payLabel(pm)+'</button>';}).join('');
+  var cards=list.map(function(o){
+    return '<button class="li-card" data-act="confirmOffline" data-no="'+o.no+'" data-role="'+role+'">'+
+      '<div class="li-top"><span class="li-title">'+esc(o.serviceName)+'</span>'+stTag('unpaid')+'</div>'+
+      '<div class="li-sub">'+esc(o.date)+' · '+esc(o.stylistName)+' · 顾客 '+esc(o.name)+(o.source==='walkin'?' · 散客开单':'')+'</div>'+
+      '<div class="li-foot"><span class="no">'+o.no+'</span><span><span style="font-size:11px;color:var(--green);">确认收款 ›</span> <span class="li-amt">¥'+o.amount+'</span></span></div></button>';
+  }).join('');
+  return '<div class="notice" style="margin-top:12px;">把待支付订单确认收款（status=paid）。当前方式：<b>'+payLabel(S.offlineMethod)+'</b>。仅为演示记录，不产生真实资金流动。</div>'+
+    '<div class="form-grid" style="padding-bottom:0;"><div class="frow"><label>线下收款方式</label><div class="seg">'+pays+'</div></div></div>'+
+    '<div class="list-wrap">'+(cards||'<div class="empty">'+I('i-wallet')+'<div>暂无待收款订单</div></div>')+'</div>';
+}
+function memberManagePage(role){
+  var m=S.member;
+  var bonusVal=m.bonusMode==='auto'?bonusFor(Number(m.amount)||0):(Number(m.bonus)||0);
+  var accounts=S.memberAccounts.map(function(a){
+    return '<div class="comm-row"><div class="cnm">'+esc(a.name)+' <em>累计 ¥'+a.totalRecharge+'</em></div>'+
+      '<div class="cval">本金 <b>¥'+a.balance+'</b><br><span style="font-size:10px;color:var(--ink-3);">赠 ¥'+a.bonusBalance+'</span></div></div>';
+  }).join('')||'<div style="font-size:12px;color:var(--ink-3);">暂无账户</div>';
+  var pays=['cash','offline_scan'].map(function(pm){return '<button class="'+(m.pay===pm?'on':'')+'" data-act="mpay" data-v="'+pm+'">'+payLabel(pm)+'</button>';}).join('');
+  var bonusSeg='<button class="'+(m.bonusMode==='auto'?'on':'')+'" data-act="mbonusMode" data-v="auto">按规则自动算</button><button class="'+(m.bonusMode==='manual'?'on':'')+'" data-act="mbonusMode" data-v="manual">手动指定</button>';
+  return '<div class="notice" style="margin-top:12px;">员工与老板可在后台录储值、消费抵扣；老板还可退本金。全部为演示记录，不接在线支付、不收真钱；余额不得为负。</div>'+
+    '<div class="sec-t"><span class="tt">储值账户总览</span><span class="more">'+S.memberAccounts.length+' 个</span></div>'+
+    '<div class="card" style="margin:0 16px;padding:4px 14px;">'+accounts+'</div>'+
+    '<div class="sec-t"><span class="tt">① 后台录储值</span><span class="more">赠金按规则算</span></div>'+
+    '<div class="form-grid">'+
+      '<div class="frow"><label>顾客姓名</label><div class="input"><input id="mName" placeholder="顾客姓名" value="'+esc(m.name)+'"></div></div>'+
+      '<div class="frow"><label>充值本金（¥）</label><div class="input"><input id="mAmount" type="number" min="1" placeholder="输入充值金额" value="'+esc(m.amount)+'"></div></div>'+
+      '<div class="frow"><label>赠送金</label><div class="seg">'+bonusSeg+'</div>'+
+        (m.bonusMode==='manual'?'<div class="input" style="margin-top:8px;"><input id="mBonus" type="number" min="0" placeholder="手动赠送金额" value="'+esc(m.bonus)+'"></div>':'')+'</div>'+
+      '<div class="frow"><label>充值方式（演示记录）</label><div class="seg">'+pays+'</div></div>'+
+      '<div class="calc-bar">按储值规则赠送：<b>¥'+bonusVal+'</b>'+(m.bonusMode==='auto'?'（满 1000 赠 100 / 满 2000 赠 250）':'（手动指定）')+'</div>'+
+      '<button class="btn btn-main btn-block" data-act="doRecharge" data-role="'+role+'">确认录储值（演示）</button>'+
+    '</div>'+
+    '<div class="sec-t"><span class="tt">② 消费抵扣</span><span class="more">先赠金后本金</span></div>'+
+    '<div class="form-grid">'+
+      '<div class="frow"><label>顾客姓名</label><div class="input"><input id="cName" placeholder="顾客姓名" value="'+esc(m.cname)+'"></div></div>'+
+      '<div class="frow"><label>抵扣金额（¥）</label><div class="input"><input id="cAmount" type="number" min="1" placeholder="输入抵扣金额" value="'+esc(m.camount)+'"></div></div>'+
+      '<div class="frow"><label>关联订单号（选填，抵扣后计入分账）</label><div class="input"><input id="cOrder" placeholder="如 OD2003" value="'+esc(m.orderNo)+'"></div></div>'+
+      '<button class="btn btn-sec btn-block" data-act="doConsume" data-role="'+role+'">确认抵扣（演示）</button>'+
+    '</div>'+
+    (role==='boss'?'<div class="sec-t"><span class="tt">③ 退本金（仅老板）</span><span class="more">赠金按比例扣回</span></div>'+
+    '<div class="form-grid">'+
+      '<div class="frow"><label>顾客姓名</label><div class="input"><input id="rName" placeholder="顾客姓名" value="'+esc(m.rname)+'"></div></div>'+
+      '<div class="frow"><label>退款本金（¥）</label><div class="input"><input id="rAmount" type="number" min="1" placeholder="输入退还本金" value="'+esc(m.ramount)+'"></div></div>'+
+      '<button class="btn btn-gold btn-block" data-act="doRefund">确认退本金（演示）</button>'+
+    '</div>':'')+
+    '<div class="notice" style="margin-bottom:18px;">余额不足时抵扣/退款会被拒绝；赠送金按规则抵扣与扣回，账面余额不会为负。</div>';
+}
+function commissionPage(role){
+  var mine=role==='staff';
+  var rb=rangeBounds();
+  var data=calcCommission(rb,mine?'阿哲':null);
+  var ranges=[['today','今日'],['week','本周'],['month','本月']].map(function(x){
+    return '<button class="chip '+(S.bossRange===x[0]?'on':'')+'" data-act="range" data-v="'+x[0]+'">'+x[1]+'</button>';
+  }).join('');
+  var rows=data.rows.map(function(x){
+    return '<div class="comm-row">'+
+      (x.avatar?'<img class="avatar" style="width:34px;height:34px;" src="'+esc(x.avatar)+'" alt="'+esc(x.name)+'">':'<div class="avatar" style="width:34px;height:34px;font-size:10px;">'+esc(x.name)+'</div>')+
+      '<div class="cnm">'+esc(x.name)+' <em>'+x.count+' 单 · 比例 '+x.rate+'%</em></div>'+
+      '<div class="cval">营业额 ¥'+x.amount+'<br><b>分账 ¥'+x.commission+'</b></div></div>';
+  }).join('');
+  var cr=S.rules.commission_rules;
+  return '<div class="range">'+ranges+'</div>'+
+    '<div class="metrics">'+
+      '<div class="bm"><div class="k">订单数</div><div class="v">'+data.count+'</div><div class="u">单</div></div>'+
+      '<div class="bm gold"><div class="k">'+(mine?'我的营业额':'全店营业额')+'</div><div class="v">¥'+data.amount+'</div><div class="u">模拟数据</div></div>'+
+      '<div class="bm gold"><div class="k">'+(mine?'我的分账':'全店分账')+'</div><div class="v">¥'+data.commission+'</div><div class="u">按规则计算</div></div></div>'+
+    '<div class="sec-t"><span class="tt">'+(mine?'我的分账明细':'发型师分账明细')+'</span><span class="more">'+esc(cr.mode==='by_category'?'按类别':('统一 '+cr.flatRate+'%'))+'</span></div>'+
+    '<div class="card" style="margin:0 16px;padding:4px 14px;">'+(rows||'<div class="empty" style="padding:30px 0;">该时段暂无可分账订单</div>')+'</div>'+
+    (mine?'<div class="notice">员工仅可见本人服务订单的模拟分账，看不到全店数据，也不能修改提成/储值规则；真实结算需签约后由微信分账完成。</div>':
+      '<div class="notice">口径：已支付/已完成订单计入、退款单冲减；按 commission_rules 类别比例×金额计算。仅为演示计算，不产生真实结算。</div>')+
+    (mine?'':'<div class="list-wrap" style="padding-bottom:20px;"><button class="btn btn-sec btn-block" data-act="nav" data-page="boss/rules">查看 / 修改提成规则</button></div>');
+}
+function rulesPage(){
+  var c=S.rules.commission_rules,d=S.rules.deposit_rules;
+  var keys=Object.keys(c.categories||{});
+  var cats=keys.map(function(k,i){return '<div class="cat-row"><input value="'+esc(k)+'" readonly style="width:46%;"><span>%</span><input id="catV_'+i+'" type="number" min="0" value="'+esc(c.categories[k])+'"></div>';}).join('');
+  var tiers=(d.tiers||[]).map(function(t,i){return '<div class="tier-row"><span>满 ¥</span><input id="tierT_'+i+'" type="number" min="0" value="'+esc(t.threshold)+'"><span>赠 ¥</span><input id="tierB_'+i+'" type="number" min="0" value="'+esc(t.bonus)+'"></div>';}).join('');
+  return '<div class="notice" style="margin-top:12px;">老板可修改规则，保存后即时影响分账报表与储值赠送计算。仅为演示，不接真实资金与结算。</div>'+
+    '<div class="sec-t"><span class="tt">提成规则</span><span class="more">commission_rules</span></div>'+
+    '<div class="card" style="margin:0 16px;padding:12px 14px;">'+
+      '<div class="edit-line"><span class="ek">模式</span><span class="ev">按类别（by_category）</span></div>'+
+      '<div class="edit-line"><span class="ek">默认比例</span><span class="ev"><input id="ruleFlat" type="number" min="0" value="'+esc(c.flatRate)+'" style="width:80px;"> %</span></div>'+
+      '<div style="font-size:12px;font-weight:600;margin:12px 0 8px;">各类别比例</div>'+cats+
+      '<button class="btn btn-main btn-block" style="margin-top:12px;" data-act="saveCommission">保存提成规则</button></div>'+
+    '<div class="sec-t"><span class="tt">储值规则</span><span class="more">deposit_rules</span></div>'+
+    '<div class="card" style="margin:0 16px 18px;padding:12px 14px;">'+
+      '<div class="edit-line"><span class="ek">赠送档位</span><span class="ev" style="font-size:11px;">储值达档位赠对应金额</span></div>'+tiers+
+      '<div class="edit-line"><span class="ek">退款政策</span><span class="ev" style="font-size:11px;">'+esc(d.refundPolicy)+'</span></div>'+
+      '<button class="btn btn-main btn-block" style="margin-top:12px;" data-act="saveDeposit">保存储值规则</button></div>';
+}
+
+var RENDER={
+  'customer/index':customerHome,
+  'customer/services':customerServices,
+  'customer/stylists':customerStylists,
+  'customer/booking':customerBooking,
+  'customer/bookings':customerBookings,
+  'customer/orders':customerOrders,
+  'customer/mine':customerMine,
+  'staff/workbench':staffWorkbench,
+  'staff/bookings':staffBookings,
+  'staff/records':staffRecords,
+  'staff/profile':staffProfile,
+  'staff/role-switch':roleSwitch,
+  'boss/dashboard':bossDashboard,
+  'boss/shop':bossShop,
+  'boss/staff-manage':bossStaffManage,
+  'boss/service-manage':bossServiceManage,
+  'boss/bookings':bossBookings,
+  'boss/orders':bossOrders,
+  'customer/member':customerMember,
+  'staff/walkin':function(){return walkinPage('staff');},
+  'staff/offline-pay':function(){return offlinePayPage('staff');},
+  'staff/member-manage':function(){return memberManagePage('staff');},
+  'staff/commission':function(){return commissionPage('staff');},
+  'boss/walkin':function(){return walkinPage('boss');},
+  'boss/offline-pay':function(){return offlinePayPage('boss');},
+  'boss/member-manage':function(){return memberManagePage('boss');},
+  'boss/commission':function(){return commissionPage('boss');},
+  'boss/rules':rulesPage
+};
+
+/* ============ 渲染主函数 ============ */
+function render(){
+  var f=cur(),meta=PAGES[f.page]||{title:'演示'};
+  var dark=!!meta.dark;
+  // 状态栏
+  $('#sbar').className='sbar '+(dark?'dark':'light');
+  $('#sbar').innerHTML='<span>9:41</span><span class="capsule '+(dark?'':'lite')+'"><i></i><span class="cbar"></span></span>';
+  // 导航栏
+  $('#nav').className='navbar '+(dark?'dark':'light');
+  var backBtn=meta.back?'<span class="back" data-act="back">'+I('i-back')+'</span>':'';
+  $('#nav').innerHTML=backBtn+'<span>'+esc(meta.title)+'</span>';
+  // 内容
+  var body=RENDER[f.page]?RENDER[f.page](f.params):'';
+  if(f.page==='staff/booking-detail')body=staffBookingDetail(f.params.no);
+  $('#viewport').innerHTML=body;
+  $('#viewport').scrollTop=0;
+  // TabBar
+  var role=ROLES[S.role];
+  var rootPage=S.stack[0].page;
+  var activeTab=(PAGES[rootPage]||{}).tab;
+  $('#tabbar').innerHTML=role.tabs.map(function(t){
+    return '<button class="tab '+(activeTab===t.key?'on':'')+'" data-act="tab" data-tab="'+t.key+'">'+I(t.icon)+t.title+'</button>';
+  }).join('');
+  // 左侧
+  renderSide(activeTab);
+  // 右侧
+  renderMonitor();
+  $('#stageCap').textContent=role.label;
+}
+function renderSide(activeTab){
+  var role=ROLES[S.role];
+  $('#roleBox').innerHTML=Object.keys(ROLES).map(function(r){
+    return '<button class="role-btn '+(S.role===r?'on':'')+'" data-act="switchRole" data-role="'+r+'">'+
+      '<span class="rb-ic">'+I(ROLES[r].icon)+'</span><span><span class="rb-t">'+ROLES[r].label+'</span><span class="rb-d" style="display:block;">'+ROLES[r].desc+'</span></span></button>';
+  }).join('');
+  var f=cur();
+  var tabPages=Object.keys(PAGES).filter(function(p){return p.indexOf(S.role+'/')===0&&PAGES[p].tab;});
+  var subPages=Object.keys(PAGES).filter(function(p){return p.indexOf(S.role+'/')===0&&!PAGES[p].tab;});
+  var pageName={index:'店铺首页',services:'项目页',booking:'预约页（核心）',mine:'个人中心',member:'我的储值',workbench:'工作台',bookings:'预约列表',profile:'我的资料',walkin:'散客开单','offline-pay':'确认线下收款','member-manage':'会员储值',commission:'分账报表',dashboard:'经营概览',shop:'门店管理',rules:'规则设置',orders:'订单管理'};
+  var short=function(p){var k=p.split('/')[1];return pageName[k]||k;};
+  var tabHtml=tabPages.map(function(p){return '<button class="nav-link '+((PAGES[p].tab===activeTab)?'cur':'')+'" data-act="goto" data-page="'+p+'">'+short(p)+'<span class="np">TAB</span></button>';}).join('');
+  var subHtml=subPages.map(function(p){return '<button class="nav-link '+(f.page===p?'cur':'')+'" data-act="goto" data-page="'+p+'">'+short(p)+'<span class="np">›</span></button>';}).join('');
+  $('#navMap').innerHTML='<div class="nav-group-t">底部导航页</div>'+tabHtml+'<div class="nav-group-t" style="margin-top:10px;">子页面</div><div class="sub-links">'+subHtml+'</div>';
+}
+function renderMonitor(){
+  var bk=S.bookings.length,od=S.orders.length;
+  var paid=S.orders.filter(function(o){return o.status==='paid';}).reduce(function(a,o){return a+o.amount;},0);
+  var pend=S.bookings.filter(function(b){return b.status==='pending';}).length;
+  $('#statGrid').innerHTML=
+    '<div class="stat-box"><div class="sk">预约总数</div><div class="sv">'+bk+'</div></div>'+
+    '<div class="stat-box"><div class="sk">订单总数</div><div class="sv">'+od+'</div></div>'+
+    '<div class="stat-box"><div class="sk">待确认</div><div class="sv">'+pend+'</div></div>'+
+    '<div class="stat-box"><div class="sk">已支付合计</div><div class="sv gold">¥'+paid+'</div></div>';
+  $('#logList').innerHTML=S.logs.slice(0,14).map(function(l){
+    return '<div class="log-item"><span class="lt">'+l.t+'</span> <span class="la">['+esc(l.a)+']</span> '+esc(l.m)+'</div>';
+  }).join('');
+}
+
+/* ============ 事件处理 ============ */
+var ACT={
+  tab:function(d){switchTab(d.tab);},
+  goto:function(d){
+    var meta=PAGES[d.page]||{};
+    if(meta.tab){switchTab(meta.tab);}
+    else if(d.page==='staff/booking-detail'&&!d.no){
+      var b=S.bookings.filter(function(x){return x.status!=='cancelled';})[0];
+      nav(d.page,{no:b?b.no:''});
+    }
+    else{nav(d.page,{no:d.no});}
+  },
+  nav:function(d){nav(d.page,{no:d.no});},
+  back:function(){back();},
+  switchRole:function(d){switchRole(d.role);},
+  call:function(){toast('拨号：'+S.shop.phone+'（演示，不真实拨打）');},
+  goBook:function(d){
+    S.draft.serviceId=d.id;
+    switchTab('booking');
+  },
+  stylistInfo:function(d){
+    var x=sty(d.id);
+    if(x.status==='resting'){toast(x.name+' 休息中，暂不可预约',true);return;}
+    S.draft.stylistId=x.id;switchTab('booking');
+  },
+  dservice:function(d){S.draft.serviceId=d.id;render();},
+  dsty:function(d){S.draft.stylistId=d.id;render();},
+  dday:function(d){S.draft.date=parseInt(d.v,10);S.draft.time='';render();},
+  dtime:function(d){S.draft.time=d.v;render();},
+  fservice:function(d){S.filter.service=d.v;render();},
+  fbooking:function(d){S.filter.booking=d.v;render();},
+  forder:function(d){S.filter.order=d.v;render();},
+  range:function(d){S.bossRange=d.v;render();},
+  submitBook:function(){
+    var d=S.draft;
+    var name=($('#bkName')||{}).value||'';
+    var phone=($('#bkPhone')||{}).value||'';
+    d.name=name.trim();d.phone=phone.trim();
+    if(!d.serviceId){toast('请选择项目',true);return;}
+    if(!d.stylistId){toast('请选择发型师',true);return;}
+    if(d.date===null||!d.time){toast('请选择日期和时间',true);return;}
+    if(!d.name){toast('请填写姓名',true);return;}
+    if(!/^1\d{10}$/.test(d.phone)){toast('请填写 11 位手机号',true);return;}
+    var sv=svc(d.serviceId);
+    var sy=d.stylistId==='ANY'?{name:'不指定'}:sty(d.stylistId);
+    S.seq.bk++;
+    var no='BK'+(S.seq.bk);
+    S.bookings.unshift({no:no,name:d.name,phone:d.phone,serviceId:sv.id,serviceName:sv.name,price:sv.price,
+      stylistId:d.stylistId,stylistName:sy.name,date:dayStr(d.date),time:d.time,status:'pending',created:dayStr(0)});
+    log('顾客','提交预约 '+no+'（'+d.name+'）');
+    toast('预约已提交，等待确认 ✓');
+    S.draft.time='';S.draft.name='';S.draft.phone='';
+    switchTab('mine');nav('customer/bookings');
+  },
+  cancelBook:function(d){
+    var b=S.bookings.filter(function(x){return x.no===d.no;})[0];
+    if(b){b.status='cancelled';log('顾客','取消了预约 '+d.no);toast('预约已取消，时段已释放');render();}
+  },
+  openBkDetail:function(d){nav('staff/booking-detail',{no:d.no});},
+  setWork:function(d){
+    S.stylists[0].status=d.v;
+    log('员工','工作状态切换为 '+({available:'可预约',servicing:'服务中',resting:'休息中'}[d.v]));
+    toast('工作状态已更新，顾客端同步');render();
+  },
+  advance:function(d){
+    var b=S.bookings.filter(function(x){return x.no===d.no;})[0];
+    if(!b)return;
+    b.status=d.to;
+    log('员工',d.no+' → '+FLOW_LABEL[FLOW.indexOf(d.to)]);
+    if(d.to==='completed'){
+      S.seq.od++;
+      var ono='OD'+S.seq.od;
+      S.orders.unshift({no:ono,name:b.name,serviceName:b.serviceName,amount:b.price,stylistName:b.stylistName,status:'unpaid',pay:'',date:dayStr(0)});
+      log('系统','服务完成，自动生成订单 '+ono);
+      toast('服务完成，已自动生成订单（顾客可在「我的订单」模拟支付）');
+    }else{
+      toast('已更新：'+FLOW_LABEL[FLOW.indexOf(d.to)]);
+    }
+    render();
+  },
+  pay:function(d){
+    var o=S.orders.filter(function(x){return x.no===d.no;})[0];
+    if(o&&o.status==='unpaid'){o.status='paid';o.pay='mock';log('顾客','模拟支付 '+o.no+' ¥'+o.amount);toast('模拟支付成功（不产生真实扣款）');render();}
+  },
+  refund:function(d){
+    var o=S.orders.filter(function(x){return x.no===d.no;})[0];
+    if(o&&o.status==='paid'){o.status='refunded';log('老板','模拟退款 '+o.no+' ¥'+o.amount);toast('已模拟退款（不产生真实资金流动）');render();}
+  },
+  toggleStaff:function(d){
+    var x=sty(d.id);
+    x.status=x.status==='available'?'resting':'available';
+    log('老板',x.name+(x.status==='available'?'已启用':'已设为休息'));
+    toast(x.name+' 状态已更新');render();
+  },
+  addStaff:function(){toast('新增员工：演示中已模拟建档（正式版由老板端表单提交）');},
+  toggleService:function(d){toast('项目 '+d.id+' 上下架：正式版可改价与上下架，实时同步顾客端');},
+  addService:function(){toast('新增项目：演示中已占位（正式版可编辑价格与时长）');},
+  assign:function(d){
+    var b=S.bookings.filter(function(x){return x.no===d.no;})[0];
+    if(!b)return;
+    var avail=S.stylists.filter(function(x){return x.status!=='resting';});
+    var s=avail[b.stylistId==='ANY'?0:(b.stylistId==='S001'?1:0)];
+    b.stylistId=s.id;b.stylistName=s.name;
+    log('老板',d.no+' 分配给 '+s.name);toast('已分配发型师：'+s.name);render();
+  },
+  wservice:function(d){S.walkin.serviceId=d.id;render();},
+  wsty:function(d){S.walkin.stylistId=d.id;render();},
+  wpay:function(d){S.walkin.payMethod=d.v;render();},
+  wpaid:function(d){S.walkin.paid=d.v==='1';render();},
+  doWalkin:function(d){
+    var w=S.walkin;
+    var name=(($('#wName')||{}).value||'').trim();
+    if(!name){toast('请填写顾客姓名',true);return;}
+    var sv=svc(w.serviceId);
+    if(!sv){toast('请选择项目',true);return;}
+    var amount=sv.price;
+    if(d.role==='boss'&&($('#wAmount')||{}).value!==''){
+      var a=Number($('#wAmount').value);
+      if(!isFinite(a)||a<=0){toast('覆盖金额必须为正数',true);return;}
+      amount=round2(a);
+    }
+    S.seq.od++;
+    var no='OD'+S.seq.od;
+    var sy=w.stylistId==='ANY'?{name:'不指定'}:sty(w.stylistId);
+    var paid=w.paid===true;
+    var who=d.role==='boss'?'老板':'员工';
+    var op=d.role==='boss'?'店主':'阿哲';
+    S.orders.unshift({no:no,name:name,serviceName:sv.name,category:sv.category,amount:amount,
+      stylistName:sy.name,status:paid?'paid':'unpaid',pay:paid?w.payMethod:'',
+      source:'walkin',bookingNo:null,paidBy:paid?op:'',paidByName:paid?op:'',date:dayStr(0)});
+    log(who,'散客开单 '+no+'（'+name+'）'+(paid?' · '+payLabel(w.payMethod)+'已收款':' · 待收款'));
+    toast(paid?'散客开单成功，已记录线下收款（演示不扣款）':'散客开单成功，订单待收款');
+    w.name='';w.amount='';
+    nav(d.role==='boss'?'boss/orders':'staff/records');
+  },
+  setOfflineMethod:function(d){S.offlineMethod=d.v;render();},
+  confirmOffline:function(d){
+    var o=S.orders.filter(function(x){return x.no===d.no;})[0];
+    if(!o||o.status!=='unpaid')return;
+    var who=d.role==='boss'?'老板':'员工';
+    var op=d.role==='boss'?'店主':'阿哲';
+    o.status='paid';o.pay=S.offlineMethod;o.paidBy=op;o.paidByName=op;
+    log(who,'确认线下收款 '+o.no+' ¥'+o.amount+'（'+payLabel(o.pay)+'）');
+    toast('已确认收款（演示，不产生真实资金流动）');render();
+  },
+  mpay:function(d){S.member.pay=d.v;render();},
+  mbonusMode:function(d){S.member.bonusMode=d.v;render();},
+  doRecharge:function(d){
+    var m=S.member;
+    var name=(($('#mName')||{}).value||'').trim()||'散客';
+    var amt=Number(($('#mAmount')||{}).value);
+    if(!isFinite(amt)||amt<=0){toast('充值金额必须为正数',true);return;}
+    amt=round2(amt);
+    var bonus=m.bonusMode==='auto'?bonusFor(amt):(Number(($('#mBonus')||{}).value)||0);
+    if(!isFinite(bonus)||bonus<0){toast('赠送金不能为负数',true);return;}
+    bonus=round2(bonus);
+    var a=accountByName(name);
+    if(!a){a={id:'MA'+Date.now().toString(36).toUpperCase(),name:name,balance:0,bonusBalance:0,totalRecharge:0};S.memberAccounts.push(a);}
+    a.balance=round2(a.balance+amt);a.bonusBalance=round2(a.bonusBalance+bonus);a.totalRecharge=round2(a.totalRecharge+amt);
+    S.memberLedger.unshift({id:'ML'+(S.seq.ml++),name:name,type:'recharge',amount:amt,bonus:bonus,balanceAfter:a.balance,bonusAfter:a.bonusBalance,
+      pay:m.pay,operator:(S.role==='boss'?'店主':'阿哲'),orderNo:'',remark:'后台录充值（演示，不收真钱）',time:now().slice(0,5)});
+    log(S.role==='boss'?'老板':'员工','录储值 '+name+' ¥'+amt+'，赠 ¥'+bonus+'（演示）');
+    toast('已录储值 ¥'+amt+'，赠送 ¥'+bonus+'（演示，不收真钱）');
+    m.amount='';m.bonus='';render();
+  },
+  doConsume:function(d){
+    var m=S.member;
+    var name=(($('#cName')||{}).value||'').trim();
+    var amt=Number(($('#cAmount')||{}).value);
+    var orderNo=(($('#cOrder')||{}).value||'').trim();
+    if(!name||!isFinite(amt)||amt<=0){toast('请填写顾客姓名与有效抵扣金额',true);return;}
+    amt=round2(amt);
+    var a=accountByName(name);
+    if(!a){toast('该顾客暂无储值账户',true);return;}
+    var bonusUse=round2(Math.min(a.bonusBalance,amt));
+    var principal=round2(amt-bonusUse);
+    if(a.balance<principal){toast('储值余额不足（可抵本金 ¥'+a.balance+'）',true);return;}
+    a.bonusBalance=round2(a.bonusBalance-bonusUse);a.balance=round2(a.balance-principal);
+    S.memberLedger.unshift({id:'ML'+(S.seq.ml++),name:name,type:'consume',amount:-principal,bonus:-bonusUse,balanceAfter:a.balance,bonusAfter:a.bonusBalance,
+      pay:'',operator:(S.role==='boss'?'店主':'阿哲'),orderNo:orderNo,remark:'消费抵扣（先赠送金后本金）',time:now().slice(0,5)});
+    var linked=false;
+    if(orderNo){var o=S.orders.filter(function(x){return x.no===orderNo;})[0];if(o&&o.status==='unpaid'){o.status='paid';o.pay='mock';o.paidByName=S.role==='boss'?'店主':'阿哲';linked=true;log('系统','储值抵扣关联订单 '+orderNo+' 视为已支付');}}
+    log(S.role==='boss'?'老板':'员工','消费抵扣 '+name+' ¥'+amt+'（赠 ¥'+bonusUse+' + 本金 ¥'+principal+'）');
+    toast('已抵扣 ¥'+amt+(linked?'，关联订单计入分账':''));
+    m.camount='';m.orderNo='';render();
+  },
+  doRefund:function(){
+    var m=S.member;
+    var name=(($('#rName')||{}).value||'').trim();
+    var amt=Number(($('#rAmount')||{}).value);
+    if(!name||!isFinite(amt)||amt<=0){toast('请填写顾客姓名与有效退款金额',true);return;}
+    amt=round2(amt);
+    var a=accountByName(name);
+    if(!a){toast('该顾客暂无储值账户',true);return;}
+    if(a.balance<amt){toast('可退本金不足（¥'+a.balance+'）',true);return;}
+    var claw=round2(a.bonusBalance*(amt/a.balance));
+    a.balance=round2(a.balance-amt);a.bonusBalance=round2(a.bonusBalance-claw);
+    S.memberLedger.unshift({id:'ML'+(S.seq.ml++),name:name,type:'refund',amount:-amt,bonus:-claw,balanceAfter:a.balance,bonusAfter:a.bonusBalance,
+      pay:'',operator:'店主',orderNo:'',remark:'退本金（赠送金按比例扣回）',time:now().slice(0,5)});
+    log('老板','退本金 '+name+' ¥'+amt+'，赠送金扣回 ¥'+claw+'（演示）');
+    toast('已退本金 ¥'+amt+'，赠送金扣回 ¥'+claw+'（演示）');
+    m.ramount='';render();
+  },
+  saveCommission:function(){
+    var c=S.rules.commission_rules;
+    var keys=Object.keys(c.categories||{});
+    keys.forEach(function(k,i){
+      var el=$('#catV_'+i),v=Number((el||{}).value);
+      if((el||{}).value!==''&&isFinite(v)&&v>=0)c.categories[k]=v;
+    });
+    var flat=Number(($('#ruleFlat')||{}).value);if(isFinite(flat)&&flat>=0)c.flatRate=flat;
+    log('老板','保存提成规则（演示）');toast('提成规则已保存，分账报表已重算');render();
+  },
+  saveDeposit:function(){
+    var d=S.rules.deposit_rules;
+    (d.tiers||[]).forEach(function(t,i){
+      var tv=Number(($('#tierT_'+i)||{}).value),bv=Number(($('#tierB_'+i)||{}).value);
+      if(isFinite(tv)&&tv>=0)t.threshold=tv;
+      if(isFinite(bv)&&bv>=0)t.bonus=bv;
+    });
+    log('老板','保存储值规则（演示）');toast('储值规则已保存，赠送计算已更新');render();
+  },
+  changeAvatar:function(d){
+    var target=d.id?sty(d.id):S.stylists[0];
+    if(!target)return;
+    var pal=[['#DCE9E0','#1E4A3C','#E8C9A8'],['#F3E6D2','#7A5B32','#F0D2B6'],['#E7E0EE','#4B3A5C','#EDCDB4'],['#DCE5EA','#2B3F4A','#D9B693']];
+    var cur=pal.findIndex(function(p){return target.avatar.indexOf(encodeURIComponent(p[0]))!==-1;});
+    var next=pal[((cur<0?0:cur)+1)%pal.length];
+    target.avatar=svgAvatar(next[0],next[1],next[2]);
+    log(d.id?'老板':'员工','更换头像：'+target.name+'（占位图演示）');
+    toast('头像已更换（演示占位图；正式版为上传到服务器的真实照片）');render();
+  },
+  editShop:function(){
+    toast('门店信息可编辑：正式版保存后立即生效，无需重新提交微信审核');
+  }
+};
+
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-act]');
+  if(!el)return;
+  var act=el.getAttribute('data-act');
+  if(ACT[act]){ACT[act](el.dataset,e);}
+});
+// 输入时不重绘，仅保存草稿（新增表单字段同步到对应草稿，避免点击选项后丢失）
+var WALKIN_INPUT={wName:'name',wAmount:'amount'};
+var MEMBER_INPUT={mName:'name',mAmount:'amount',mBonus:'bonus',cName:'cname',cAmount:'camount',cOrder:'orderNo',rName:'rname',rAmount:'ramount'};
+document.addEventListener('input',function(e){
+  var id=e.target.id;
+  if(id==='bkName')S.draft.name=e.target.value;
+  if(id==='bkPhone')S.draft.phone=e.target.value;
+  if(WALKIN_INPUT[id]!==undefined)S.walkin[WALKIN_INPUT[id]]=e.target.value;
+  if(MEMBER_INPUT[id]!==undefined)S.member[MEMBER_INPUT[id]]=e.target.value;
+});
+
+render();
+})();
+</script>
+</body>
+</html>
